@@ -1,0 +1,14 @@
+[
+{
+  "directory": "C:/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/interface/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe  @CMakeFiles/chess-engine.dir/includes_CXX.rsp -std=gnu++20 -o CMakeFiles\\chess-engine.dir\\src\\main.cpp.obj -c C:\\Users\\tonys\\OneDrive\\Desktop\\Projects\\Projects\\chess_engine\\interface\\src\\main.cpp",
+  "file": "C:/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/interface/src/main.cpp",
+  "output": "CMakeFiles/chess-engine.dir/src/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/interface/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe  @CMakeFiles/chess-engine.dir/includes_CXX.rsp -std=gnu++20 -o CMakeFiles\\chess-engine.dir\\src\\game.cpp.obj -c C:\\Users\\tonys\\OneDrive\\Desktop\\Projects\\Projects\\chess_engine\\interface\\src\\game.cpp",
+  "file": "C:/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/interface/src/game.cpp",
+  "output": "CMakeFiles/chess-engine.dir/src/game.cpp.obj"
+}
+]
