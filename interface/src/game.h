@@ -19,21 +19,42 @@ class Game {
     uint64_t whiteKing, blackKing;
 
     Game();
-    void draw_game();
-    void handle_input();
+    void step_game();
 
    private:
+    bool isCheck = false;
+    bool isWhiteTurn = true;
     bool isEnPassantAvailable = false;
+    bool isPlacementMode = false;
+
     Color whiteCell = {238, 238, 210, 255};
     Color greenCell = {118, 150, 86, 255};
 
-    Texture2D wp, bp, wn, bn, wb, bb, wr, br, wq, bq, wk, bk;
     // using shorthands (e.g. wp = White Pawn, exceptions are Knights which
     // are wn and bn)
+    Texture2D wp, bp, wn, bn, wb, bb, wr, br, wq, bq, wk, bk;
+
+    uint8_t selectedCell;
+    std::vector<uint8_t> last_checked_legal_moves;
 
     void draw_grid();
     void draw_pieces();
-    Texture2D get_piece_texture_on_cell(uint8_t i);
+    void move_piece(uint8_t cell, uint8_t destination, uint64_t &piece_type);
 
+    Texture2D get_piece_texture_on_cell(uint8_t i);
+    void remove_piece_on_cell(uint8_t i);
+    void remove_piece_on_cell_with_type(uint8_t i, uint64_t &piece_type);
+
+    bool is_piece_white(uint8_t cell);
     std::vector<uint8_t> get_pawn_legal_moves(uint8_t i);
-};
+
+    void draw_legal_moves(); 
+
+    void reset_placement_variables();
+
+    void handle_white_turn(uint8_t cell, Texture2D selectedCellType);
+    void handle_black_turn(uint8_t cell, Texture2D selectedCellType);
+    void handle_turn(uint8_t cell, Texture2D selectedCellType);
+
+    void handle_input();
+ };

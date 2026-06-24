@@ -11,7 +11,7 @@ int main() {
     while (!WindowShouldClose()) {
         BeginDrawing();
 
-        game.draw_game();
+        game.step_game();
 
         EndDrawing();
     }
