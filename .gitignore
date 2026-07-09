@@ -1,3 +1,7 @@
 interface/.clang-format
 interface/.clangd
 interface/compile_flags.txt
+interface/build/CMakeCache.txt
+interface/build/compile_commands.json
+interface/build/cmake_install.cmake
+interface/build/CMakeFiles
