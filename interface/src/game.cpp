@@ -553,6 +553,21 @@ std::unordered_map<uint8_t, uint8_t> Game::get_knight_legal_moves(uint8_t i) {
     return legal_moves;
 }
 
+std::unordered_map<uint8_t, uint8_t> Game::get_queen_legal_moves(uint8_t i) {
+    // A very clever trick : A king's moves are just the combination of a rook's and a bishop's.
+    // So that's what we're doing, just calling both the get_rook_legal_moves and the get_bishop_legal_moves
+    // functions, then combining the result.
+    std::unordered_map<uint8_t, uint8_t> rook_legal_moves = get_rook_legal_moves(i);
+    std::unordered_map<uint8_t, uint8_t> bishop_legal_moves = get_bishop_legal_moves(i);
+
+    std::unordered_map<uint8_t, uint8_t> legal_moves = rook_legal_moves;
+    for (auto move : bishop_legal_moves) {
+        legal_moves[move.first] = move.second;
+    }
+
+    return legal_moves;
+}
+
 void Game::move_piece(uint8_t cell, uint8_t attacking_cell, uint8_t destination, uint64_t& piece_type) {
     remove_piece_on_cell(attacking_cell);
 
@@ -631,6 +646,14 @@ void Game::handle_white_placement(uint8_t cell) {
         }
 
         reset_placement_variables();
+    } else if (get_piece_texture_on_cell(selectedCell).id == wq.id) {
+        std::unordered_map<uint8_t, uint8_t> legal_moves = get_queen_legal_moves(selectedCell);
+
+        if (legal_moves.count(cell)) {
+            place_piece(cell, legal_moves[cell], whiteQueen);
+        }
+
+        reset_placement_variables();
     }
 }
 
@@ -667,6 +690,14 @@ void Game::handle_black_placement(uint8_t cell) {
         }
 
         reset_placement_variables();
+    } else if (get_piece_texture_on_cell(selectedCell).id == bq.id) {
+        std::unordered_map<uint8_t, uint8_t> legal_moves = get_queen_legal_moves(selectedCell);
+
+        if (legal_moves.count(cell)) {
+            place_piece(cell, legal_moves[cell], blackQueen);
+        }
+
+        reset_placement_variables();
     }
 }
 
@@ -696,6 +727,11 @@ void Game::handle_white_turn(uint8_t cell, Texture2D selectedCellType) {
 
         isPlacementMode = true;
         selectedCell = cell;
+    } else if (selectedCellType.id == wq.id) {
+        last_checked_legal_moves = get_queen_legal_moves(cell);
+
+        isPlacementMode = true;
+        selectedCell = cell;
     }
 }
 
@@ -722,6 +758,11 @@ void Game::handle_black_turn(uint8_t cell, Texture2D selectedCellType) {
         selectedCell = cell;
     } else if (selectedCellType.id == bb.id) {
         last_checked_legal_moves = get_bishop_legal_moves(cell);
+
+        isPlacementMode = true;
+        selectedCell = cell;
+    } else if (selectedCellType.id == bq.id) {
+        last_checked_legal_moves = get_queen_legal_moves(cell);
 
         isPlacementMode = true;
         selectedCell = cell;
