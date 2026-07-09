@@ -272,7 +272,8 @@ bool Game::is_legal_attack(uint8_t target, bool is_attacker_white) {
     if (rank > 7 || rank < 0) return false;
 
     bool is_target_white = is_piece_white(target);
-    return is_target_white != is_attacker_white;
+    bool is_empty = is_cell_empty(target);
+    return is_empty || is_target_white != is_attacker_white;
 }
 
 std::unordered_map<uint8_t, uint8_t> Game::get_pawn_legal_moves(uint8_t i) {
@@ -508,6 +509,50 @@ std::unordered_map<uint8_t, uint8_t> Game::get_bishop_legal_moves(uint8_t i) {
     return legal_moves;
 }
 
+std::unordered_map<uint8_t, uint8_t> Game::get_knight_legal_moves(uint8_t i) {
+    std::unordered_map<uint8_t, uint8_t> legal_moves;
+
+    bool is_white = is_piece_white(i);
+    uint8_t attacker_file = i % 8;
+    uint8_t attacker_rank = i / 8;
+
+    // It is hard to loop through all the legal moves of a knight with a simple
+    // for loop, so instead, I am going to hardcode them, then check one by one whether they stand.
+    std::unordered_map<uint8_t, uint8_t> potential_moves;
+    if (attacker_rank < 6) {
+        if (attacker_file < 7) potential_moves[i + 17] = i + 17;
+        if (attacker_file > 0) potential_moves[i + 15] = i + 15;
+    }
+
+    if (attacker_file < 6) {
+        if (attacker_rank < 7) potential_moves[i + 10] = i + 10;
+        if (attacker_rank > 0) potential_moves[i - 6] = i - 6;
+    }
+
+    if (attacker_rank > 1) {
+        if (attacker_file < 7) potential_moves[i - 15] = i - 15;
+        if (attacker_file > 0) potential_moves[i - 17] = i - 17;
+    }
+
+    if (attacker_file > 1) {
+        if (attacker_rank < 7) potential_moves[i - 10] = i - 10;
+        if (attacker_rank > 0) potential_moves[i + 6] = i + 6;
+    }
+
+    for (auto pair : potential_moves) {
+        uint8_t cell = pair.first;
+        if (!is_legal_attack(cell, is_white)) continue;
+
+        int file = cell % 8;
+        int rank = cell / 8;
+
+        if (file == attacker_file || rank == attacker_rank) continue;
+        legal_moves[cell] = cell;
+    }
+
+    return legal_moves;
+}
+
 void Game::move_piece(uint8_t cell, uint8_t attacking_cell, uint8_t destination, uint64_t& piece_type) {
     remove_piece_on_cell(attacking_cell);
 
@@ -519,6 +564,7 @@ void Game::move_piece(uint8_t cell, uint8_t attacking_cell, uint8_t destination,
 void Game::place_piece(uint8_t cell, uint8_t attacking_cell, uint64_t& piece_type) {
     move_piece(selectedCell, attacking_cell, cell, piece_type);
 
+    // Enables en passant move if a pawn went 16 spaces forward
     bool is_piece_pawn = (piece_type == whitePawns || piece_type == blackPawns);
     if (is_piece_pawn && cell == selectedCell + 16 || cell == selectedCell - 16) {
         isEnPassantAvailable = true;
@@ -532,7 +578,7 @@ void Game::place_piece(uint8_t cell, uint8_t attacking_cell, uint64_t& piece_typ
 bool Game::is_piece_white(uint8_t cell) {
     Texture2D type = get_piece_texture_on_cell(cell);
 
-    // this early return is for empty cells
+    // This early return is for empty cells
     if (!type.id) return false;
 
     if (type.id == wp.id || type.id == wb.id || type.id == wn.id || type.id == wr.id || type.id == wq.id || type.id == wk.id)
@@ -569,6 +615,14 @@ void Game::handle_white_placement(uint8_t cell) {
         }
 
         reset_placement_variables();
+    } else if (get_piece_texture_on_cell(selectedCell).id == wn.id) {
+        std::unordered_map<uint8_t, uint8_t> legal_moves = get_knight_legal_moves(selectedCell);
+
+        if (legal_moves.count(cell)) {
+            place_piece(cell, legal_moves[cell], whiteKnights);
+        }
+
+        reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == wb.id) {
         std::unordered_map<uint8_t, uint8_t> legal_moves = get_bishop_legal_moves(selectedCell);
 
@@ -594,6 +648,14 @@ void Game::handle_black_placement(uint8_t cell) {
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], blackRooks);
+        }
+
+        reset_placement_variables();
+    } else if (get_piece_texture_on_cell(selectedCell).id == bn.id) {
+        std::unordered_map<uint8_t, uint8_t> legal_moves = get_knight_legal_moves(selectedCell);
+
+        if (legal_moves.count(cell)) {
+            place_piece(cell, legal_moves[cell], blackKnights);
         }
 
         reset_placement_variables();
@@ -624,6 +686,11 @@ void Game::handle_white_turn(uint8_t cell, Texture2D selectedCellType) {
 
         isPlacementMode = true;
         selectedCell = cell;
+    } else if (selectedCellType.id == wn.id) {
+        last_checked_legal_moves = get_knight_legal_moves(cell);
+
+        isPlacementMode = true;
+        selectedCell = cell;
     } else if (selectedCellType.id == wb.id) {
         last_checked_legal_moves = get_bishop_legal_moves(cell);
 
@@ -645,6 +712,11 @@ void Game::handle_black_turn(uint8_t cell, Texture2D selectedCellType) {
         selectedCell = cell;
     } else if (selectedCellType.id == br.id) {
         last_checked_legal_moves = get_rook_legal_moves(cell);
+
+        isPlacementMode = true;
+        selectedCell = cell;
+    } else if (selectedCellType.id == bn.id) {
+        last_checked_legal_moves = get_knight_legal_moves(cell);
 
         isPlacementMode = true;
         selectedCell = cell;
