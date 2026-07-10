@@ -36,11 +36,13 @@ class Game {
 
     uint8_t selectedCell;
     uint8_t lastPlacedCell = 64;
+    
+    bool white_in_check = false;
+    bool black_in_check = false;
     std::unordered_map<uint8_t, uint8_t> last_checked_legal_moves;
 
     void draw_grid();
     void draw_pieces();
-    void move_piece(uint8_t cell, uint8_t attacking_cell, uint8_t destination, uint64_t &piece_type);
 
     Texture2D get_piece_texture_on_cell(uint8_t i);
     void remove_piece_on_cell(uint8_t i);
@@ -48,7 +50,10 @@ class Game {
 
     bool is_piece_white(uint8_t cell);
     bool is_cell_empty(uint8_t cell);
-    bool is_legal_attack(uint8_t target, bool is_attacker_white);
+    bool is_valid_target(uint8_t target, bool is_attacker_white);
+
+    bool is_white_in_check();
+    bool is_black_in_check();
 
     std::unordered_map<uint8_t, uint8_t> get_pawn_legal_moves(uint8_t i);
     std::unordered_map<uint8_t, uint8_t> get_rook_legal_moves(uint8_t i);
@@ -57,10 +62,20 @@ class Game {
     std::unordered_map<uint8_t, uint8_t> get_queen_legal_moves(uint8_t i);
     std::unordered_map<uint8_t, uint8_t> get_king_legal_moves(uint8_t i);
 
+    // this function is to check the moves you get from calling any of the functions above,
+    // so that no legal moves will be able to put its own team in check.
+    std::unordered_map<uint8_t, uint8_t> get_strictly_legal_moves(std::unordered_map<uint8_t, uint8_t> legal_moves, uint8_t position, uint64_t &piece_type);
+
+    // this function is to help the above function in trying a move then checking if the team
+    // who made the move is now in check because of that move. Then, in the above function,
+    // we would delete that move if this function returns true.
+    bool try_move_and_check_if_in_check(uint8_t position, uint8_t target, uint8_t attacking_cell, uint64_t &piece_type);
+
     void draw_legal_moves(); 
 
     void reset_placement_variables();
     void place_piece(uint8_t cell, uint8_t attacking_cell, uint64_t &piece_type);
+    void move_piece(uint8_t cell, uint8_t attacking_cell, uint8_t destination, uint64_t &piece_type);
 
     void handle_white_placement(uint8_t cell);
     void handle_black_placement(uint8_t cell);

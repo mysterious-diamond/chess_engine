@@ -264,7 +264,7 @@ void Game::draw_pieces() {
     }
 }
 
-bool Game::is_legal_attack(uint8_t target, bool is_attacker_white) {
+bool Game::is_valid_target(uint8_t target, bool is_attacker_white) {
     uint8_t file = target % 8;
     uint8_t rank = target / 8;
 
@@ -285,11 +285,15 @@ std::unordered_map<uint8_t, uint8_t> Game::get_pawn_legal_moves(uint8_t i) {
     int rank = i / 8;
 
     int target_cell = i + 8 * direction;
-    if (is_cell_empty(target_cell)) {
+    if (is_cell_empty(target_cell) && is_valid_target(target_cell, is_white)) {
+        // Advance 1 square
         moves[target_cell] = target_cell;
 
         target_cell = i + 16 * direction;
-        if ((is_white ? rank == 1 : rank == 6) && is_cell_empty(target_cell)) {
+        bool is_pawn_at_start = (is_white ? rank == 1 : rank == 6);
+
+        // if pawn has never moved before, it can move 2 steps forward
+        if (is_pawn_at_start && is_cell_empty(target_cell) && is_valid_target(target_cell, is_white)) {
             moves[target_cell] = target_cell;
         }
     }
@@ -297,14 +301,14 @@ std::unordered_map<uint8_t, uint8_t> Game::get_pawn_legal_moves(uint8_t i) {
     // Check Left Top Square For Enemy
     target_cell = i + 7 * direction;
     bool is_empty = is_cell_empty(target_cell);
-    if (is_legal_attack(target_cell, is_white) && !is_empty && rank != target_cell / 8) {
+    if (is_valid_target(target_cell, is_white) && !is_empty && rank != target_cell / 8) {
         moves[target_cell] = target_cell;
     }
 
     // Check Right Top Square For Enemy
     target_cell = i + 9 * direction;
     is_empty = is_cell_empty(target_cell);
-    if (is_legal_attack(target_cell, is_white) && !is_empty && rank != target_cell / 8) {
+    if (is_valid_target(target_cell, is_white) && !is_empty && rank != target_cell / 8) {
         moves[target_cell] = target_cell;
     }
 
@@ -325,8 +329,8 @@ std::unordered_map<uint8_t, uint8_t> Game::get_pawn_legal_moves(uint8_t i) {
         bool isLeftLastMoved = (left == lastPlacedCell);
         bool isRightLastMoved = (right == lastPlacedCell);
 
-        bool isLegalLeft = is_legal_attack(left, is_white) && rank == leftRank;
-        bool isLegalRight = is_legal_attack(right, is_white) && rank == rightRank;
+        bool isLegalLeft = is_valid_target(left, is_white) && rank == leftRank;
+        bool isLegalRight = is_valid_target(right, is_white) && rank == rightRank;
 
         if (isLeftLastMoved && isLegalLeft) {
             moves[resulting_left] = left;
@@ -353,10 +357,11 @@ std::unordered_map<uint8_t, uint8_t> Game::get_rook_legal_moves(uint8_t i) {
 
         bool is_white = is_piece_white(cell);
         bool is_empty = is_cell_empty(cell);
+        bool is_legal = is_valid_target(cell, is_attacker_white);
 
-        if (is_empty) {
+        if (is_empty && is_legal) {
             legal_moves[cell] = cell;
-        } else if (is_white != is_attacker_white) {
+        } else if (is_white != is_attacker_white && is_legal) {
             legal_moves[cell] = cell;
             break;
         } else {
@@ -369,10 +374,11 @@ std::unordered_map<uint8_t, uint8_t> Game::get_rook_legal_moves(uint8_t i) {
 
         bool is_white = is_piece_white(cell);
         bool is_empty = is_cell_empty(cell);
+        bool is_legal = is_valid_target(cell, is_attacker_white);
 
-        if (is_empty) {
+        if (is_empty && is_legal) {
             legal_moves[cell] = cell;
-        } else if (is_white != is_attacker_white) {
+        } else if (is_white != is_attacker_white && is_legal) {
             legal_moves[cell] = cell;
             break;
         } else {
@@ -385,10 +391,11 @@ std::unordered_map<uint8_t, uint8_t> Game::get_rook_legal_moves(uint8_t i) {
 
         bool is_white = is_piece_white(cell);
         bool is_empty = is_cell_empty(cell);
+        bool is_legal = is_valid_target(cell, is_attacker_white);
 
-        if (is_empty) {
+        if (is_empty && is_legal) {
             legal_moves[cell] = cell;
-        } else if (is_white != is_attacker_white) {
+        } else if (is_white != is_attacker_white && is_legal) {
             legal_moves[cell] = cell;
             break;
         } else {
@@ -401,10 +408,11 @@ std::unordered_map<uint8_t, uint8_t> Game::get_rook_legal_moves(uint8_t i) {
 
         bool is_white = is_piece_white(cell);
         bool is_empty = is_cell_empty(cell);
+        bool is_legal = is_valid_target(cell, is_attacker_white);
 
-        if (is_empty) {
+        if (is_empty && is_legal) {
             legal_moves[cell] = cell;
-        } else if (is_white != is_attacker_white) {
+        } else if (is_white != is_attacker_white && is_legal) {
             legal_moves[cell] = cell;
             break;
         } else {
@@ -435,10 +443,11 @@ std::unordered_map<uint8_t, uint8_t> Game::get_bishop_legal_moves(uint8_t i) {
 
         bool is_white = is_piece_white(cell);
         bool is_empty = is_cell_empty(cell);
+        bool is_legal = is_valid_target(cell, is_attacker_white);
 
-        if (is_empty) {
+        if (is_empty && is_legal) {
             legal_moves[cell] = cell;
-        } else if (is_white != is_attacker_white) {
+        } else if (is_white != is_attacker_white && is_legal) {
             legal_moves[cell] = cell;
             break;
         } else {
@@ -455,10 +464,11 @@ std::unordered_map<uint8_t, uint8_t> Game::get_bishop_legal_moves(uint8_t i) {
 
         bool is_white = is_piece_white(cell);
         bool is_empty = is_cell_empty(cell);
+        bool is_legal = is_valid_target(cell, is_attacker_white);
 
-        if (is_empty) {
+        if (is_empty && is_legal) {
             legal_moves[cell] = cell;
-        } else if (is_white != is_attacker_white) {
+        } else if (is_white != is_attacker_white && is_legal) {
             legal_moves[cell] = cell;
             break;
         } else {
@@ -475,10 +485,11 @@ std::unordered_map<uint8_t, uint8_t> Game::get_bishop_legal_moves(uint8_t i) {
 
         bool is_white = is_piece_white(cell);
         bool is_empty = is_cell_empty(cell);
+        bool is_legal = is_valid_target(cell, is_attacker_white);
 
-        if (is_empty) {
+        if (is_empty && is_legal) {
             legal_moves[cell] = cell;
-        } else if (is_white != is_attacker_white) {
+        } else if (is_white != is_attacker_white && is_legal) {
             legal_moves[cell] = cell;
             break;
         } else {
@@ -495,10 +506,11 @@ std::unordered_map<uint8_t, uint8_t> Game::get_bishop_legal_moves(uint8_t i) {
 
         bool is_white = is_piece_white(cell);
         bool is_empty = is_cell_empty(cell);
+        bool is_legal = is_valid_target(cell, is_attacker_white);
 
-        if (is_empty) {
+        if (is_empty && is_legal) {
             legal_moves[cell] = cell;
-        } else if (is_white != is_attacker_white) {
+        } else if (is_white != is_attacker_white && is_legal) {
             legal_moves[cell] = cell;
             break;
         } else {
@@ -541,7 +553,7 @@ std::unordered_map<uint8_t, uint8_t> Game::get_knight_legal_moves(uint8_t i) {
 
     for (auto pair : potential_moves) {
         uint8_t cell = pair.first;
-        if (!is_legal_attack(cell, is_white)) continue;
+        if (!is_valid_target(cell, is_white)) continue;
 
         int file = cell % 8;
         int rank = cell / 8;
@@ -591,12 +603,41 @@ std::unordered_map<uint8_t, uint8_t> Game::get_king_legal_moves(uint8_t i) {
         bool is_file_cut = !(1 >= file_diff && file_diff >= -1);
         bool is_rank_cut = !(1 >= rank_diff && rank_diff >= -1);
 
-        if (is_legal_attack(neighbor, is_attacker_white) && !is_file_cut && !is_rank_cut) {
+        if (is_valid_target(neighbor, is_attacker_white) && !is_file_cut && !is_rank_cut) {
             legal_moves[neighbor] = neighbor;
         }
     }
 
     return legal_moves;
+}
+
+std::unordered_map<uint8_t, uint8_t> Game::get_strictly_legal_moves(std::unordered_map<uint8_t, uint8_t> legal_moves, uint8_t position,
+                                                                    uint64_t& piece_type) {
+    std::unordered_map<uint8_t, uint8_t> strictly_legal_moves;
+
+    for (auto move : legal_moves) {
+        bool result = try_move_and_check_if_in_check(position, move.first, move.second, piece_type);
+        if (!result) strictly_legal_moves[move.first] = move.second;
+    }
+
+    return strictly_legal_moves;
+}
+
+bool Game::try_move_and_check_if_in_check(uint8_t position, uint8_t target, uint8_t attacking_cell, uint64_t& piece_type) {
+    move_piece(position, attacking_cell, target, piece_type);
+
+    bool did_move_cause_check = false;
+    if (isWhiteTurn && is_white_in_check()) {
+        did_move_cause_check = true;
+    } else if (!isWhiteTurn && is_black_in_check()) {
+        did_move_cause_check = true;
+    }
+
+    if (did_move_cause_check) {
+        move_piece(target, position, position, piece_type);
+    }
+
+    return false;
 }
 
 void Game::move_piece(uint8_t cell, uint8_t attacking_cell, uint8_t destination, uint64_t& piece_type) {
@@ -636,6 +677,48 @@ bool Game::is_piece_white(uint8_t cell) {
 bool Game::is_cell_empty(uint8_t cell) {
     Texture2D type = get_piece_texture_on_cell(cell);
     return !type.id;
+}
+
+bool Game::is_white_in_check() {
+    uint8_t white_king_cell;
+    for (int i = 0; i < 64; i++) {
+        if (whiteKing & (1ull << i)) {
+            white_king_cell = i;
+        }
+    }
+
+    for (int i = 0; i < 64; i++) {
+        uint64_t shift = (1ull << i);
+
+        if ((blackPawns & shift) && get_pawn_legal_moves(i)[white_king_cell]) return true;
+        if ((blackRooks & shift) && get_rook_legal_moves(i)[white_king_cell]) return true;
+        if ((blackKnights & shift) && get_knight_legal_moves(i)[white_king_cell]) return true;
+        if ((blackBishops & shift) && get_bishop_legal_moves(i)[white_king_cell]) return true;
+        if ((blackQueen & shift) && get_queen_legal_moves(i)[white_king_cell]) return true;
+    }
+
+    return false;
+}
+
+bool Game::is_black_in_check() {
+    uint8_t black_king_cell;
+    for (int i = 0; i < 64; i++) {
+        if (blackKing & (1ull << i)) {
+            black_king_cell = i;
+        }
+    }
+
+    for (int i = 0; i < 64; i++) {
+        uint64_t shift = (1ull << i);
+
+        if ((whitePawns & shift) && get_pawn_legal_moves(i)[black_king_cell]) return true;
+        if ((whiteRooks & shift) && get_rook_legal_moves(i)[black_king_cell]) return true;
+        if ((whiteKnights & shift) && get_knight_legal_moves(i)[black_king_cell]) return true;
+        if ((whiteBishops & shift) && get_bishop_legal_moves(i)[black_king_cell]) return true;
+        if ((whiteQueen & shift) && get_queen_legal_moves(i)[black_king_cell]) return true;
+    }
+
+    return false;
 }
 
 void Game::reset_placement_variables() {
