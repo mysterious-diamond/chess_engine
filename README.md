@@ -1,5 +1,6 @@
 # A Simple Chess Engine
-I was compelled to make this chess engine after seeing how easily a "newbie" did it on YouTube. So here it is.
+I was compelled to make this chess engine after seeing how easily a "newbie" did it on YouTube.
+I also conviniently had a half year period before I go back to school, so here it is.
 
 ## HOW IT WORKS
 It searches 5 moves deep for the highest value in a custom made "Evaluation" function to determine the best course of action
