@@ -557,12 +557,43 @@ std::unordered_map<uint8_t, uint8_t> Game::get_queen_legal_moves(uint8_t i) {
     // A very clever trick : A king's moves are just the combination of a rook's and a bishop's.
     // So that's what we're doing, just calling both the get_rook_legal_moves and the get_bishop_legal_moves
     // functions, then combining the result.
+
     std::unordered_map<uint8_t, uint8_t> rook_legal_moves = get_rook_legal_moves(i);
     std::unordered_map<uint8_t, uint8_t> bishop_legal_moves = get_bishop_legal_moves(i);
 
     std::unordered_map<uint8_t, uint8_t> legal_moves = rook_legal_moves;
     for (auto move : bishop_legal_moves) {
         legal_moves[move.first] = move.second;
+    }
+
+    return legal_moves;
+}
+
+std::unordered_map<uint8_t, uint8_t> Game::get_king_legal_moves(uint8_t i) {
+    // Now for this one, I will make an offset array, then loop through all those offsets
+    // To get the king's neighbors since a king's legal moves are just 1 cell in all the
+    // Directions around it.
+    std::unordered_map<uint8_t, uint8_t> legal_moves;
+    int neighbors[8] = {7, 8, 9, -1, 1, -9, -8, -7};
+    bool is_attacker_white = is_piece_white(i);
+
+    for (int offset : neighbors) {
+        int neighbor = i + offset;
+
+        int file = neighbor % 8;
+        int rank = neighbor / 8;
+
+        int file_diff = file - (i % 8);
+        int rank_diff = rank - (i / 8);
+
+        // Make sure absolute difference is always less or equal to 1, since if a king
+        // is beside the edge of the board, the moves can wrap around to the other side, which we don't want.
+        bool is_file_cut = !(1 >= file_diff && file_diff >= -1);
+        bool is_rank_cut = !(1 >= rank_diff && rank_diff >= -1);
+
+        if (is_legal_attack(neighbor, is_attacker_white) && !is_file_cut && !is_rank_cut) {
+            legal_moves[neighbor] = neighbor;
+        }
     }
 
     return legal_moves;
@@ -654,6 +685,14 @@ void Game::handle_white_placement(uint8_t cell) {
         }
 
         reset_placement_variables();
+    } else if (get_piece_texture_on_cell(selectedCell).id == wk.id) {
+        std::unordered_map<uint8_t, uint8_t> legal_moves = get_king_legal_moves(selectedCell);
+
+        if (legal_moves.count(cell)) {
+            place_piece(cell, legal_moves[cell], whiteKing);
+        }
+
+        reset_placement_variables();
     }
 }
 
@@ -698,6 +737,14 @@ void Game::handle_black_placement(uint8_t cell) {
         }
 
         reset_placement_variables();
+    } else if (get_piece_texture_on_cell(selectedCell).id == bk.id) {
+        std::unordered_map<uint8_t, uint8_t> legal_moves = get_king_legal_moves(selectedCell);
+
+        if (legal_moves.count(cell)) {
+            place_piece(cell, legal_moves[cell], blackKing);
+        }
+
+        reset_placement_variables();
     }
 }
 
@@ -732,6 +779,11 @@ void Game::handle_white_turn(uint8_t cell, Texture2D selectedCellType) {
 
         isPlacementMode = true;
         selectedCell = cell;
+    } else if (selectedCellType.id == wk.id) {
+        last_checked_legal_moves = get_king_legal_moves(cell);
+
+        isPlacementMode = true;
+        selectedCell = cell;
     }
 }
 
@@ -763,6 +815,11 @@ void Game::handle_black_turn(uint8_t cell, Texture2D selectedCellType) {
         selectedCell = cell;
     } else if (selectedCellType.id == bq.id) {
         last_checked_legal_moves = get_queen_legal_moves(cell);
+
+        isPlacementMode = true;
+        selectedCell = cell;
+    } else if (selectedCellType.id == bk.id) {
+        last_checked_legal_moves = get_king_legal_moves(cell);
 
         isPlacementMode = true;
         selectedCell = cell;

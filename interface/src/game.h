@@ -55,6 +55,7 @@ class Game {
     std::unordered_map<uint8_t, uint8_t> get_bishop_legal_moves(uint8_t i);
     std::unordered_map<uint8_t, uint8_t> get_knight_legal_moves(uint8_t i);
     std::unordered_map<uint8_t, uint8_t> get_queen_legal_moves(uint8_t i);
+    std::unordered_map<uint8_t, uint8_t> get_king_legal_moves(uint8_t i);
 
     void draw_legal_moves(); 
 
