@@ -25,6 +25,13 @@ class Game {
     bool isCheck = false;
     bool isWhiteTurn = true;
     bool isEnPassantAvailable = false;
+
+    bool isWhiteShortCastleAvailable = true;
+    bool isWhiteLongCastleAvailable = true;
+
+    bool isBlackShortCastleAvailable = true;
+    bool isBlackLongCastleAvailable = true;
+
     bool isPlacementMode = false;
 
     Color whiteCell = {238, 238, 210, 255};
