@@ -624,6 +624,7 @@ std::unordered_map<uint8_t, uint8_t> Game::get_strictly_legal_moves(std::unorder
 }
 
 bool Game::try_move_and_check_if_in_check(uint8_t position, uint8_t target, uint8_t attacking_cell, uint64_t& piece_type) {
+    Texture2D last_piece = get_piece_texture_on_cell(attacking_cell);
     move_piece(position, attacking_cell, target, piece_type);
 
     bool did_move_cause_check = false;
@@ -633,10 +634,29 @@ bool Game::try_move_and_check_if_in_check(uint8_t position, uint8_t target, uint
         did_move_cause_check = true;
     }
 
-    if (did_move_cause_check) {
-        move_piece(target, position, position, piece_type);
-    }
+    move_piece(target, position, position, piece_type);
+    if (last_piece.id == wp.id)
+        whitePawns ^= (1ull << attacking_cell);
+    else if (last_piece.id == wr.id)
+        whiteRooks ^= (1ull << attacking_cell);
+    else if (last_piece.id == wn.id)
+        whiteKnights ^= (1ull << attacking_cell);
+    else if (last_piece.id == wb.id)
+        whiteBishops ^= (1ull << attacking_cell);
+    else if (last_piece.id == wq.id)
+        whiteQueen ^= (1ull << attacking_cell);
+    else if (last_piece.id == bp.id)
+        blackPawns ^= (1ull << attacking_cell);
+    else if (last_piece.id == br.id)
+        blackRooks ^= (1ull << attacking_cell);
+    else if (last_piece.id == bn.id)
+        blackKnights ^= (1ull << attacking_cell);
+    else if (last_piece.id == bb.id)
+        blackBishops ^= (1ull << attacking_cell);
+    else if (last_piece.id == bq.id)
+        blackQueen ^= (1ull << attacking_cell);
 
+    if (did_move_cause_check) return true;
     return false;
 }
 
@@ -729,7 +749,8 @@ void Game::reset_placement_variables() {
 
 void Game::handle_white_placement(uint8_t cell) {
     if (get_piece_texture_on_cell(selectedCell).id == wp.id) {
-        std::unordered_map<uint8_t, uint8_t> legal_moves = get_pawn_legal_moves(selectedCell);
+        std::unordered_map<uint8_t, uint8_t> legal_moves = last_checked_legal_moves;
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, whitePawns);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], whitePawns);
@@ -737,15 +758,16 @@ void Game::handle_white_placement(uint8_t cell) {
 
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == wr.id) {
-        std::unordered_map<uint8_t, uint8_t> legal_moves = get_rook_legal_moves(selectedCell);
-
+        std::unordered_map<uint8_t, uint8_t> legal_moves = last_checked_legal_moves;
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, whiteRooks);
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], whiteRooks);
         }
 
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == wn.id) {
-        std::unordered_map<uint8_t, uint8_t> legal_moves = get_knight_legal_moves(selectedCell);
+        std::unordered_map<uint8_t, uint8_t> legal_moves = last_checked_legal_moves;
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, whiteKnights);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], whiteKnights);
@@ -753,7 +775,8 @@ void Game::handle_white_placement(uint8_t cell) {
 
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == wb.id) {
-        std::unordered_map<uint8_t, uint8_t> legal_moves = get_bishop_legal_moves(selectedCell);
+        std::unordered_map<uint8_t, uint8_t> legal_moves = last_checked_legal_moves;
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, whiteBishops);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], whiteBishops);
@@ -761,7 +784,8 @@ void Game::handle_white_placement(uint8_t cell) {
 
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == wq.id) {
-        std::unordered_map<uint8_t, uint8_t> legal_moves = get_queen_legal_moves(selectedCell);
+        std::unordered_map<uint8_t, uint8_t> legal_moves = last_checked_legal_moves;
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, whiteQueen);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], whiteQueen);
@@ -769,7 +793,8 @@ void Game::handle_white_placement(uint8_t cell) {
 
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == wk.id) {
-        std::unordered_map<uint8_t, uint8_t> legal_moves = get_king_legal_moves(selectedCell);
+        std::unordered_map<uint8_t, uint8_t> legal_moves = last_checked_legal_moves;
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, whiteKing);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], whiteKing);
@@ -782,6 +807,7 @@ void Game::handle_white_placement(uint8_t cell) {
 void Game::handle_black_placement(uint8_t cell) {
     if (get_piece_texture_on_cell(selectedCell).id == bp.id) {
         std::unordered_map<uint8_t, uint8_t> legal_moves = get_pawn_legal_moves(selectedCell);
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, blackPawns);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], blackPawns);
@@ -790,6 +816,7 @@ void Game::handle_black_placement(uint8_t cell) {
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == br.id) {
         std::unordered_map<uint8_t, uint8_t> legal_moves = get_rook_legal_moves(selectedCell);
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, blackRooks);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], blackRooks);
@@ -798,6 +825,7 @@ void Game::handle_black_placement(uint8_t cell) {
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == bn.id) {
         std::unordered_map<uint8_t, uint8_t> legal_moves = get_knight_legal_moves(selectedCell);
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, blackKnights);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], blackKnights);
@@ -806,6 +834,7 @@ void Game::handle_black_placement(uint8_t cell) {
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == bb.id) {
         std::unordered_map<uint8_t, uint8_t> legal_moves = get_bishop_legal_moves(selectedCell);
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, blackBishops);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], blackBishops);
@@ -814,6 +843,7 @@ void Game::handle_black_placement(uint8_t cell) {
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == bq.id) {
         std::unordered_map<uint8_t, uint8_t> legal_moves = get_queen_legal_moves(selectedCell);
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, blackQueen);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], blackQueen);
@@ -822,6 +852,7 @@ void Game::handle_black_placement(uint8_t cell) {
         reset_placement_variables();
     } else if (get_piece_texture_on_cell(selectedCell).id == bk.id) {
         std::unordered_map<uint8_t, uint8_t> legal_moves = get_king_legal_moves(selectedCell);
+        legal_moves = get_strictly_legal_moves(legal_moves, selectedCell, blackKing);
 
         if (legal_moves.count(cell)) {
             place_piece(cell, legal_moves[cell], blackKing);
@@ -839,31 +870,37 @@ void Game::handle_white_turn(uint8_t cell, Texture2D selectedCellType) {
 
     if (selectedCellType.id == wp.id) {
         last_checked_legal_moves = get_pawn_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, whitePawns);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == wr.id) {
         last_checked_legal_moves = get_rook_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, whiteRooks);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == wn.id) {
         last_checked_legal_moves = get_knight_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, whiteKnights);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == wb.id) {
         last_checked_legal_moves = get_bishop_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, whiteBishops);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == wq.id) {
         last_checked_legal_moves = get_queen_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, whiteQueen);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == wk.id) {
         last_checked_legal_moves = get_king_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, whiteKing);
 
         isPlacementMode = true;
         selectedCell = cell;
@@ -877,32 +914,38 @@ void Game::handle_black_turn(uint8_t cell, Texture2D selectedCellType) {
     }
 
     if (selectedCellType.id == bp.id) {
-        this->last_checked_legal_moves = get_pawn_legal_moves(cell);
+        last_checked_legal_moves = get_pawn_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, blackPawns);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == br.id) {
         last_checked_legal_moves = get_rook_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, blackRooks);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == bn.id) {
         last_checked_legal_moves = get_knight_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, blackKnights);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == bb.id) {
         last_checked_legal_moves = get_bishop_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, blackBishops);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == bq.id) {
         last_checked_legal_moves = get_queen_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, blackQueen);
 
         isPlacementMode = true;
         selectedCell = cell;
     } else if (selectedCellType.id == bk.id) {
         last_checked_legal_moves = get_king_legal_moves(cell);
+        last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, blackKing);
 
         isPlacementMode = true;
         selectedCell = cell;
