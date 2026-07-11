@@ -1,7 +1,6 @@
 #include "game.h"
 
 #include <cstdint>
-#include <iostream>
 #include <unordered_map>
 
 #include "raylib.h"
@@ -617,7 +616,9 @@ std::unordered_map<uint8_t, uint8_t> Game::get_king_legal_moves(uint8_t i) {
             }
 
             if (!blockedPath) legal_moves[i - 2] = i - 2;
-        } else if (isWhiteShortCastleAvailable) {
+        }
+
+        if (isWhiteShortCastleAvailable) {
             bool blockedPath = false;
             for (int cell = i + 1; cell < 7; cell++) {
                 if (!get_piece_texture_on_cell(cell).id) continue;
@@ -635,7 +636,9 @@ std::unordered_map<uint8_t, uint8_t> Game::get_king_legal_moves(uint8_t i) {
             }
 
             if (!blockedPath) legal_moves[i - 2] = i - 2;
-        } else if (isBlackShortCastleAvailable) {
+        }
+
+        if (isBlackShortCastleAvailable) {
             bool blockedPath = false;
             for (int cell = i + 1; cell < 63; cell++) {
                 if (!get_piece_texture_on_cell(cell).id) continue;
@@ -838,10 +841,10 @@ void Game::handle_white_placement(uint8_t cell) {
             place_piece(cell, legal_moves[cell], whiteKing);
 
             // Edge case for castling
-            if (isWhiteLongCastleAvailable && selectedCell + 2 == cell) {
-                move_piece(0, selectedCell, selectedCell, whiteRooks);
-            } else if (isWhiteShortCastleAvailable && selectedCell - 2 == cell) {
-                move_piece(0, selectedCell, selectedCell, whiteRooks);
+            if (isWhiteLongCastleAvailable && selectedCell - 2 == cell) {
+                move_piece(0, selectedCell - 1, selectedCell - 1, whiteRooks);
+            } else if (isWhiteShortCastleAvailable && selectedCell + 2 == cell) {
+                move_piece(7, selectedCell + 1, selectedCell + 1, whiteRooks);
             }
 
             isWhiteLongCastleAvailable = isWhiteShortCastleAvailable = false;
@@ -903,10 +906,10 @@ void Game::handle_black_placement(uint8_t cell) {
             place_piece(cell, legal_moves[cell], blackKing);
 
             // Edge case for castling
-            if (isBlackLongCastleAvailable && selectedCell + 2 == cell) {
-                move_piece(0, selectedCell - 1, selectedCell - 1, blackRooks);
-            } else if (isBlackShortCastleAvailable && selectedCell - 2 == cell) {
-                move_piece(0, selectedCell - 1, selectedCell - 1, blackRooks);
+            if (isBlackLongCastleAvailable && selectedCell - 2 == cell) {
+                move_piece(56, selectedCell - 1, selectedCell - 1, blackRooks);
+            } else if (isBlackShortCastleAvailable && selectedCell + 2 == cell) {
+                move_piece(63, selectedCell + 1, selectedCell + 1, blackRooks);
             }
 
             isBlackLongCastleAvailable = isBlackShortCastleAvailable = false;
@@ -1013,17 +1016,15 @@ void Game::handle_black_turn(uint8_t cell, Texture2D selectedCellType) {
         last_checked_legal_moves = get_king_legal_moves(cell);
         last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, blackKing);
 
-        if (last_checked_legal_moves.count(selectedCell - 2)) {
-            if (black_in_check || !last_checked_legal_moves.count(selectedCell - 1)) {
-                last_checked_legal_moves.erase(selectedCell - 2);
-                std::cout << "hi " << black_in_check << " " << !last_checked_legal_moves.count(selectedCell - 1) << '\n';
+        if (last_checked_legal_moves.count(cell - 2)) {
+            if (black_in_check || !last_checked_legal_moves.count(cell - 1)) {
+                last_checked_legal_moves.erase(cell - 2);
             }
         }
 
-        if (last_checked_legal_moves.count(selectedCell + 2)) {
-            if (black_in_check || !last_checked_legal_moves.count(selectedCell + 1)) {
-                last_checked_legal_moves.erase(selectedCell + 2);
-                std::cout << "hello " << black_in_check << " " << !last_checked_legal_moves.count(selectedCell + 1) << '\n';
+        if (last_checked_legal_moves.count(cell + 2)) {
+            if (black_in_check || !last_checked_legal_moves.count(cell + 1)) {
+                last_checked_legal_moves.erase(cell + 2);
             }
         }
 
