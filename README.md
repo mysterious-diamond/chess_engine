@@ -9,3 +9,6 @@ This is a very simple implementation of a chess engine, however, it is surprisin
 ## HOW TO RUN
 You can just grab the 2 executables, one is the interface/build/chess_engine.exe, then just run them. (OTHER EXECUTABLE W.I.P.)
 
+## CREDITS
+I did not write the actual graphical processing library, raylib.
+Credits to raylib's writer, raysan5. You can check the official raylib library at https://github.com/raysan5/raylib.
