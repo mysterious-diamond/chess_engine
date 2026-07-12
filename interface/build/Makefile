@@ -59,7 +59,7 @@ EQUALS = =
 CMAKE_SOURCE_DIR = C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface\build
+CMAKE_BINARY_DIR = C:\Users\tonys\onedrive\desktop\projects\projects\chess_engine\interface\build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -86,9 +86,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface\build\CMakeFiles C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface\build\\CMakeFiles\progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\tonys\onedrive\desktop\projects\projects\chess_engine\interface\build\CMakeFiles C:\Users\tonys\onedrive\desktop\projects\projects\chess_engine\interface\build\\CMakeFiles\progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface\build\CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\tonys\onedrive\desktop\projects\projects\chess_engine\interface\build\CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -116,24 +116,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named chess-engine
+# Target rules for targets named chess
 
 # Build rule for target.
-chess-engine: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 chess-engine
-.PHONY : chess-engine
+chess: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 chess
+.PHONY : chess
 
 # fast build rule for target.
-chess-engine/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess-engine.dir\build.make CMakeFiles/chess-engine.dir/build
-.PHONY : chess-engine/fast
+chess/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/build
+.PHONY : chess/fast
 
 src/game.obj: src/game.cpp.obj
 .PHONY : src/game.obj
 
 # target to build an object file
 src/game.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess-engine.dir\build.make CMakeFiles/chess-engine.dir/src/game.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/src/game.cpp.obj
 .PHONY : src/game.cpp.obj
 
 src/game.i: src/game.cpp.i
@@ -141,7 +141,7 @@ src/game.i: src/game.cpp.i
 
 # target to preprocess a source file
 src/game.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess-engine.dir\build.make CMakeFiles/chess-engine.dir/src/game.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/src/game.cpp.i
 .PHONY : src/game.cpp.i
 
 src/game.s: src/game.cpp.s
@@ -149,7 +149,7 @@ src/game.s: src/game.cpp.s
 
 # target to generate assembly for a file
 src/game.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess-engine.dir\build.make CMakeFiles/chess-engine.dir/src/game.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/src/game.cpp.s
 .PHONY : src/game.cpp.s
 
 src/main.obj: src/main.cpp.obj
@@ -157,7 +157,7 @@ src/main.obj: src/main.cpp.obj
 
 # target to build an object file
 src/main.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess-engine.dir\build.make CMakeFiles/chess-engine.dir/src/main.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/src/main.cpp.obj
 .PHONY : src/main.cpp.obj
 
 src/main.i: src/main.cpp.i
@@ -165,7 +165,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess-engine.dir\build.make CMakeFiles/chess-engine.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -173,7 +173,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess-engine.dir\build.make CMakeFiles/chess-engine.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 # Help Target
@@ -184,7 +184,7 @@ help:
 	@echo ... depend
 	@echo ... edit_cache
 	@echo ... rebuild_cache
-	@echo ... chess-engine
+	@echo ... chess
 	@echo ... src/game.obj
 	@echo ... src/game.i
 	@echo ... src/game.s
