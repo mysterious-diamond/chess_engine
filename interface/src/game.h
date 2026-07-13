@@ -22,17 +22,19 @@ class Game {
     void step_game();
 
    private:
-    bool isCheck = false;
-    bool isWhiteTurn = true;
-    bool isEnPassantAvailable = false;
+    bool is_white_turn = true;
+    bool is_en_passant_available = false;
+    bool is_selecting_promotion = false;
+    bool white_in_check = false;
+    bool black_in_check = false;
 
-    bool isWhiteShortCastleAvailable = true;
-    bool isWhiteLongCastleAvailable = true;
+    bool is_white_short_castle_available = true;
+    bool is_white_long_castle_available = true;
 
-    bool isBlackShortCastleAvailable = true;
-    bool isBlackLongCastleAvailable = true;
+    bool is_black_long_castle_available = true;
+    bool is_black_short_castle_available = true;
 
-    bool isPlacementMode = false;
+    bool is_placement_mode = false;
 
     Color whiteCell = {238, 238, 210, 255};
     Color greenCell = {118, 150, 86, 255};
@@ -43,8 +45,6 @@ class Game {
     uint8_t selectedCell;
     uint8_t lastPlacedCell = 64;
     
-    bool white_in_check = false;
-    bool black_in_check = false;
     std::unordered_map<uint8_t, uint8_t> last_checked_legal_moves;
 
     void draw_grid();
@@ -72,7 +72,7 @@ class Game {
     // a wrapper function for the functions above
     std::unordered_map<uint8_t, uint8_t> get_piece_legal_moves(uint8_t i);
 
-    // this function is to help the brlow function by trying a move then checking if the team
+    // this function is to help the below function by trying a move then checking if the team
     // who made the move is now in check because of that move. Then, in the below function,
     // we would delete that move if this function returns true as it is not legal.
     bool try_move_and_check_if_in_check(uint8_t position, uint8_t target, uint8_t attacking_cell, uint64_t *piece_type);
@@ -81,11 +81,9 @@ class Game {
     // so that no legal moves will be able to put its own team in check.
     std::unordered_map<uint8_t, uint8_t> get_strictly_legal_moves(std::unordered_map<uint8_t, uint8_t> legal_moves, uint8_t position, uint64_t *piece_type);
 
-    void draw_legal_moves(); 
-
-    void reset_placement_variables();
-    void place_piece(uint8_t cell, uint8_t attacking_cell, uint64_t *piece_type);
     void move_piece(uint8_t cell, uint8_t attacking_cell, uint8_t destination, uint64_t *piece_type);
+    void place_piece(uint8_t cell, uint8_t attacking_cell, uint64_t *piece_type);
+    void reset_placement_variables();
 
     void handle_white_placement(uint8_t cell);
     void handle_black_placement(uint8_t cell);
@@ -97,4 +95,7 @@ class Game {
     void handle_turn(uint8_t cell, Texture2D selectedCellType);
 
     void handle_input();
+    void draw_legal_moves(); 
+    void render_promotion_board();
+    void handle_promotion_input();
  };
