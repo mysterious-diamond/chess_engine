@@ -4,10 +4,14 @@
 #include <unordered_map>
 #include "raylib.h"
 
+// define macros
 #define SCREEN_HEIGHT 800
 #define SCREEN_WIDTH 800
 #define CELL_SIZE 100
 #define CELLS_IN_ROW 8
+#define PIECE_IMAGE_SIZE 100
+#define PROMOTION_BOARD_HEIGHT 175
+#define PROMOTION_BOARD_WIDTH (PIECE_IMAGE_SIZE * 4 + 50)
 
 class Game {
    public:

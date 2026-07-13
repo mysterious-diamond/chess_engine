@@ -5,11 +5,6 @@
 
 #include "raylib.h"
 
-bool ok() {
-    bool ye = false;
-    return true;
-}
-
 uint64_t initializePawns(bool isWhite) {
     uint64_t result = 0;
     if (isWhite) {
@@ -964,6 +959,42 @@ void Game::draw_legal_moves() {
 void Game::render_promotion_board() {
     // set to !is_white_turn because we already switched the turns in handle_x_placement functions.
     bool is_white_promotion = !is_white_turn;
+
+    // Draw the promotion board
+    int x = (SCREEN_WIDTH / 2) - (PROMOTION_BOARD_WIDTH / 2);
+    int y = (SCREEN_HEIGHT / 2) - (PROMOTION_BOARD_HEIGHT / 2);
+    DrawRectangle(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, greenCell);
+    DrawRectangleLines(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, BLACK);
+
+    // There are 4 types of pieces you can promote to,
+    // Rook, knight, bishop and the queen, the following variables
+    // are to equally space the icons for them.
+    int quadrant = PROMOTION_BOARD_WIDTH / 4;
+    int iconY = y + PROMOTION_BOARD_HEIGHT / 2 - PIECE_IMAGE_SIZE / 2;
+
+    // Draw rook icon
+    int rookX = x + quadrant - quadrant / 2 - PIECE_IMAGE_SIZE / 2;
+    Texture2D rookTexture = (is_white_promotion ? wr : br);
+    DrawTexture(rookTexture, rookX, iconY, WHITE);
+    DrawRectangleLines(rookX, iconY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+
+    // Draw knight icon
+    int knightX = x + quadrant * 2 - quadrant / 2 - PIECE_IMAGE_SIZE / 2;
+    Texture2D knightTexture = (is_white_promotion ? wn : bn);
+    DrawTexture(knightTexture, knightX, iconY, WHITE);
+    DrawRectangleLines(knightX, iconY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+
+    // Draw bishop icon
+    int bishopX = x + quadrant * 3 - quadrant / 2 - PIECE_IMAGE_SIZE / 2;
+    Texture2D bishopTexture = (is_white_promotion ? wb : bb);
+    DrawTexture(bishopTexture, bishopX, iconY, WHITE);
+    DrawRectangleLines(bishopX, iconY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+
+    // Draw queen icon
+    int queenX = x + quadrant * 4 - quadrant / 2 - PIECE_IMAGE_SIZE / 2;
+    Texture2D queenTexture = (is_white_promotion ? wq : bq);
+    DrawTexture(queenTexture, queenX, iconY, WHITE);
+    DrawRectangleLines(queenX, iconY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
 }
 
 void Game::step_game() {
@@ -971,4 +1002,5 @@ void Game::step_game() {
     draw_pieces();
     handle_input();
     draw_legal_moves();
+    if (is_selecting_promotion) render_promotion_board();
 }
