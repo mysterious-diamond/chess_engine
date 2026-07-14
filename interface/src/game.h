@@ -10,8 +10,8 @@
 #define CELL_SIZE 100
 #define CELLS_IN_ROW 8
 #define PIECE_IMAGE_SIZE 100
-#define PROMOTION_BOARD_HEIGHT 175
-#define PROMOTION_BOARD_WIDTH (PIECE_IMAGE_SIZE * 4 + 50)
+#define PROMOTION_BOARD_HEIGHT 400
+#define PROMOTION_BOARD_WIDTH 100
 
 class Game {
    public:
@@ -100,6 +100,8 @@ class Game {
 
     void handle_input();
     void draw_legal_moves(); 
+
+    uint8_t get_pawn_promotion_cell();
     void render_promotion_board();
     void handle_promotion_input();
  };

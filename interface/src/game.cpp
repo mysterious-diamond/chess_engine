@@ -113,28 +113,6 @@ Game::Game() {
     selectedCell = 64;
 }
 
-void Game::draw_grid() {
-    for (int i = 0; i < CELLS_IN_ROW; i++) {
-        for (int j = 0; j < CELLS_IN_ROW; j++) {
-            // This is used to alternate the color. It goes from
-            // white->green->white to then green->white->green. These color
-            // schemes are from chess.com
-
-            Color color;
-            if (j & 1 && i & 1)
-                color = this->whiteCell;
-            else if (j & 1)
-                color = this->greenCell;
-            else if (i & 1)
-                color = this->greenCell;
-            else
-                color = this->whiteCell;
-
-            DrawRectangle(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
-        }
-    }
-}
-
 Texture2D Game::get_piece_texture_on_cell(uint8_t i) {
     if (i == 64) return {0};
 
@@ -228,21 +206,6 @@ void Game::remove_piece_on_cell(uint8_t i) {
 
     uint64_t* type = get_piece_type_from_texture(get_piece_texture_on_cell(i));
     remove_piece_on_cell_with_type(i, type);
-}
-
-void Game::draw_pieces() {
-    for (uint8_t i = 0; i < 64; i++) {
-        if (is_placement_mode && this->selectedCell == i) {
-            Vector2 mousePos = GetMousePosition();
-
-            DrawTexture(get_piece_texture_on_cell(i), mousePos.x - CELL_SIZE / 2.0, mousePos.y - CELL_SIZE / 2.0, WHITE);
-            continue;
-        }
-
-        int x = (i % 8) * CELL_SIZE;
-        int y = SCREEN_HEIGHT - (i / 8 + 1) * CELL_SIZE;
-        DrawTexture(get_piece_texture_on_cell(i), x, y, WHITE);
-    }
 }
 
 bool Game::is_valid_target(uint8_t target, bool is_attacker_white) {
@@ -791,9 +754,9 @@ void Game::handle_white_placement(uint8_t cell) {
         place_piece(cell, legal_moves[cell], type);
 
         if (texture.id == wr.id) {
-            if (is_white_long_castle_available && cell == 0)
+            if (is_white_long_castle_available && selectedCell == 0)
                 is_white_long_castle_available = false;
-            else if (is_white_short_castle_available && cell == 7)
+            else if (is_white_short_castle_available && selectedCell == 7)
                 is_white_short_castle_available = false;
         }
 
@@ -821,9 +784,9 @@ void Game::handle_black_placement(uint8_t cell) {
         place_piece(cell, legal_moves[cell], type);
 
         if (texture.id == br.id) {
-            if (is_black_long_castle_available && cell == 55)
+            if (is_black_long_castle_available && selectedCell == 56)
                 is_black_long_castle_available = false;
-            else if (is_black_short_castle_available && cell == 63)
+            else if (is_black_short_castle_available && selectedCell == 63)
                 is_black_short_castle_available = false;
         }
 
@@ -873,7 +836,7 @@ void Game::handle_white_turn(uint8_t cell, Texture2D selectedCellType) {
     last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, type);
 
     if (texture.id == wk.id) {
-        check_castling_legality(last_checked_legal_moves, white_in_check, selectedCell);
+        check_castling_legality(last_checked_legal_moves, white_in_check, cell);
     }
 
     is_placement_mode = true;
@@ -895,7 +858,7 @@ void Game::handle_black_turn(uint8_t cell, Texture2D selectedCellType) {
     last_checked_legal_moves = get_strictly_legal_moves(last_checked_legal_moves, cell, type);
 
     if (texture.id == bk.id) {
-        check_castling_legality(last_checked_legal_moves, black_in_check, selectedCell);
+        check_castling_legality(last_checked_legal_moves, black_in_check, cell);
     }
 
     is_placement_mode = true;
@@ -903,14 +866,14 @@ void Game::handle_black_turn(uint8_t cell, Texture2D selectedCellType) {
 }
 
 void Game::handle_turn(uint8_t cell, Texture2D selectedCellType) {
+    white_in_check = is_white_in_check();
+    black_in_check = is_black_in_check();
+
     if (is_white_turn) {
         handle_white_turn(cell, selectedCellType);
     } else {
         handle_black_turn(cell, selectedCellType);
     }
-
-    white_in_check = is_white_in_check();
-    black_in_check = is_black_in_check();
 }
 
 void Game::handle_input() {
@@ -924,6 +887,8 @@ void Game::handle_input() {
         uint8_t file = (int)mousePos.x / CELL_SIZE;
         uint8_t rank = (SCREEN_HEIGHT - (int)mousePos.y) / CELL_SIZE;
         uint8_t cell = file + rank * 8;
+
+        if (!is_white_turn) cell = file + (8 - rank - 1) * 8;
 
         Texture2D cell_type = get_piece_texture_on_cell(cell);
 
@@ -941,6 +906,45 @@ void Game::handle_input() {
     }
 }
 
+void Game::draw_grid() {
+    for (int i = 0; i < CELLS_IN_ROW; i++) {
+        for (int j = 0; j < CELLS_IN_ROW; j++) {
+            // This is used to alternate the color. It goes from
+            // white->green->white to then green->white->green. These color
+            // schemes are from chess.com
+
+            Color color;
+            if (j & 1 && i & 1)
+                color = (is_white_turn ? this->whiteCell : this->greenCell);
+            else if (j & 1)
+                color = (is_white_turn ? this->greenCell : this->whiteCell);
+            else if (i & 1)
+                color = (is_white_turn ? this->greenCell : this->whiteCell);
+            else
+                color = (is_white_turn ? this->whiteCell : this->greenCell);
+
+            DrawRectangle(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
+        }
+    }
+}
+
+void Game::draw_pieces() {
+    for (uint8_t i = 0; i < 64; i++) {
+        if (is_placement_mode && this->selectedCell == i) {
+            Vector2 mousePos = GetMousePosition();
+
+            DrawTexture(get_piece_texture_on_cell(i), mousePos.x - CELL_SIZE / 2.0, mousePos.y - CELL_SIZE / 2.0, WHITE);
+            continue;
+        }
+
+        int x = (i % 8) * CELL_SIZE;
+        int y = SCREEN_HEIGHT - (i / 8 + 1) * CELL_SIZE;
+
+        if (!is_white_turn) y = 800 - y - 100;
+        DrawTexture(get_piece_texture_on_cell(i), x, y, WHITE);
+    }
+}
+
 void Game::draw_legal_moves() {
     for (auto move : this->last_checked_legal_moves) {
         uint8_t target_cell = move.first;
@@ -951,56 +955,82 @@ void Game::draw_legal_moves() {
         int x = file * CELL_SIZE + CELL_SIZE / 2;
         int y = SCREEN_HEIGHT - (rank + 1) * CELL_SIZE + CELL_SIZE / 2;
 
+        if (!is_white_turn) y = 800 - y;
+
         const Color circle_color = {0, 0, 0, 39};
         DrawCircle(x, y, CELL_SIZE / 2.0 - 15, circle_color);
     }
+}
+
+uint8_t Game::get_pawn_promotion_cell() {
+    for (int i = 56; i <= 63; i++) {
+        if (whitePawns ^ (1ull << i)) {
+            return i;
+        }
+    }
+
+    for (int i = 0; i <= 7; i++) {
+        if (blackPawns ^ (1ull << i)) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 void Game::render_promotion_board() {
     // set to !is_white_turn because we already switched the turns in handle_x_placement functions.
     bool is_white_promotion = !is_white_turn;
 
+    int promotionCell = get_pawn_promotion_cell();
+    if (promotionCell == -1) return;
+
     // Draw the promotion board
-    int x = (SCREEN_WIDTH / 2) - (PROMOTION_BOARD_WIDTH / 2);
-    int y = (SCREEN_HEIGHT / 2) - (PROMOTION_BOARD_HEIGHT / 2);
-    DrawRectangle(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, greenCell);
+    int x = (promotionCell % 8) * 100;
+    int y = (promotionCell / 8 + 1) * 100;
+    DrawRectangle(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, WHITE);
     DrawRectangleLines(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, BLACK);
 
     // There are 4 types of pieces you can promote to,
     // Rook, knight, bishop and the queen, the following variables
     // are to equally space the icons for them.
-    int quadrant = PROMOTION_BOARD_WIDTH / 4;
-    int iconY = y + PROMOTION_BOARD_HEIGHT / 2 - PIECE_IMAGE_SIZE / 2;
-
-    // Draw rook icon
-    int rookX = x + quadrant - quadrant / 2 - PIECE_IMAGE_SIZE / 2;
-    Texture2D rookTexture = (is_white_promotion ? wr : br);
-    DrawTexture(rookTexture, rookX, iconY, WHITE);
-    DrawRectangleLines(rookX, iconY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
-
-    // Draw knight icon
-    int knightX = x + quadrant * 2 - quadrant / 2 - PIECE_IMAGE_SIZE / 2;
-    Texture2D knightTexture = (is_white_promotion ? wn : bn);
-    DrawTexture(knightTexture, knightX, iconY, WHITE);
-    DrawRectangleLines(knightX, iconY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
-
-    // Draw bishop icon
-    int bishopX = x + quadrant * 3 - quadrant / 2 - PIECE_IMAGE_SIZE / 2;
-    Texture2D bishopTexture = (is_white_promotion ? wb : bb);
-    DrawTexture(bishopTexture, bishopX, iconY, WHITE);
-    DrawRectangleLines(bishopX, iconY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+    int quadrant = PROMOTION_BOARD_HEIGHT / 4;
 
     // Draw queen icon
-    int queenX = x + quadrant * 4 - quadrant / 2 - PIECE_IMAGE_SIZE / 2;
+    int queenY = y + quadrant * 0;
     Texture2D queenTexture = (is_white_promotion ? wq : bq);
-    DrawTexture(queenTexture, queenX, iconY, WHITE);
-    DrawRectangleLines(queenX, iconY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+    DrawTexture(queenTexture, x, queenY, WHITE);
+
+    // Draw rook icon
+    int rookY = y + quadrant * 1;
+    Texture2D rookTexture = (is_white_promotion ? wr : br);
+    DrawTexture(rookTexture, x, rookY, WHITE);
+
+    // Draw knight icon
+    int knightY = y + quadrant * 2;
+    Texture2D knightTexture = (is_white_promotion ? wn : bn);
+    DrawTexture(knightTexture, x, knightY, WHITE);
+
+    // Draw bishop icon
+    int bishopY = y + quadrant * 3;
+    Texture2D bishopTexture = (is_white_promotion ? wb : bb);
+    DrawTexture(bishopTexture, x, bishopY, WHITE);
+
+    // Draw the outlines for the icons
+    DrawRectangleLines(x, queenY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+    DrawRectangleLines(x, rookY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+    DrawRectangleLines(x, knightY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+    DrawRectangleLines(x, bishopY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
 }
 
 void Game::step_game() {
     draw_grid();
     draw_pieces();
-    handle_input();
     draw_legal_moves();
-    if (is_selecting_promotion) render_promotion_board();
+
+    if (is_selecting_promotion) {
+        render_promotion_board();
+    } else {
+        handle_input();
+    }
 }
