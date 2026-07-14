@@ -673,6 +673,9 @@ void Game::place_piece(uint8_t destination, uint8_t attacking_cell, uint64_t* pi
         is_en_passant_available = true;
     } else if (destination / 8 == 7 || destination / 8 == 0) {
         is_selecting_promotion = true;
+
+        // switch back since its not time for black yet
+        is_white_turn = !is_white_turn;
     } else {
         is_en_passant_available = false;
     }
@@ -979,15 +982,14 @@ uint8_t Game::get_pawn_promotion_cell() {
 }
 
 void Game::render_promotion_board() {
-    // set to !is_white_turn because we already switched the turns in handle_x_placement functions.
-    bool is_white_promotion = !is_white_turn;
-
     int promotionCell = get_pawn_promotion_cell();
     if (promotionCell == -1) return;
 
     // Draw the promotion board
     int x = (promotionCell % 8) * 100;
-    int y = (promotionCell / 8 + 1) * 100;
+    int y = (8 - promotionCell / 8 - 1) * 100;
+
+    if (!is_white_turn) y = 800 - y;
     DrawRectangle(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, WHITE);
     DrawRectangleLines(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, BLACK);
 
@@ -996,24 +998,26 @@ void Game::render_promotion_board() {
     // are to equally space the icons for them.
     int quadrant = PROMOTION_BOARD_HEIGHT / 4;
 
-    // Draw queen icon
-    int queenY = y + quadrant * 0;
-    Texture2D queenTexture = (is_white_promotion ? wq : bq);
+    // Define y coordinates
+    int queenY = y + quadrant * 0 * (is_white_turn ? 1 : -1);
+    int rookY = y + quadrant * 1 * (is_white_turn ? 1 : -1);
+    int knightY = y + quadrant * 2 * (is_white_turn ? 1 : -1);
+    int bishopY = y + quadrant * 3 * (is_white_turn ? 1 : -1);
+
+    // Draw queen
+    Texture2D queenTexture = (is_white_turn ? wq : bq);
     DrawTexture(queenTexture, x, queenY, WHITE);
 
-    // Draw rook icon
-    int rookY = y + quadrant * 1;
-    Texture2D rookTexture = (is_white_promotion ? wr : br);
+    // Draw rook
+    Texture2D rookTexture = (is_white_turn ? wr : br);
     DrawTexture(rookTexture, x, rookY, WHITE);
 
-    // Draw knight icon
-    int knightY = y + quadrant * 2;
-    Texture2D knightTexture = (is_white_promotion ? wn : bn);
+    // Draw knight
+    Texture2D knightTexture = (is_white_turn ? wn : bn);
     DrawTexture(knightTexture, x, knightY, WHITE);
 
-    // Draw bishop icon
-    int bishopY = y + quadrant * 3;
-    Texture2D bishopTexture = (is_white_promotion ? wb : bb);
+    // Draw bishop
+    Texture2D bishopTexture = (is_white_turn ? wb : bb);
     DrawTexture(bishopTexture, x, bishopY, WHITE);
 
     // Draw the outlines for the icons
@@ -1030,6 +1034,7 @@ void Game::step_game() {
 
     if (is_selecting_promotion) {
         render_promotion_board();
+        handle_promotion_input();
     } else {
         handle_input();
     }
