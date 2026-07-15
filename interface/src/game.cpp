@@ -878,6 +878,9 @@ void Game::handle_turn(uint8_t clickedCell, Texture2D selectedCellTexture) {
     } else {
         handle_black_turn(clickedCell, selectedCellTexture);
     }
+
+    white_in_check = is_white_in_check();
+    black_in_check = is_black_in_check();
 }
 
 void Game::handle_input() {
@@ -934,18 +937,26 @@ void Game::draw_grid() {
 
 void Game::draw_pieces() {
     for (uint8_t i = 0; i < 64; i++) {
-        if (is_placement_mode && this->selectedCell == i) {
-            Vector2 mousePos = GetMousePosition();
-
-            DrawTexture(get_piece_texture_on_cell(i), mousePos.x - CELL_SIZE / 2.0, mousePos.y - CELL_SIZE / 2.0, WHITE);
-            continue;
-        }
+        Texture2D piece_texture = get_piece_texture_on_cell(i);
 
         int x = (i % 8) * CELL_SIZE;
         int y = SCREEN_HEIGHT - (i / 8 + 1) * CELL_SIZE;
 
         if (!is_white_turn) y = 800 - y - 100;
-        DrawTexture(get_piece_texture_on_cell(i), x, y, WHITE);
+
+        if (white_in_check && piece_texture.id == wk.id || black_in_check && piece_texture.id == bk.id) {
+            Rectangle rect = {(float)x, (float)y, CELL_SIZE, CELL_SIZE};
+            DrawRectangleLinesEx(rect, 7, RED);
+        }
+
+        if (is_placement_mode && this->selectedCell == i) {
+            Vector2 mousePos = GetMousePosition();
+
+            DrawTexture(piece_texture, mousePos.x - CELL_SIZE / 2.0, mousePos.y - CELL_SIZE / 2.0, WHITE);
+            continue;
+        }
+
+        DrawTexture(piece_texture, x, y, WHITE);
     }
 }
 
@@ -1098,14 +1109,15 @@ void Game::handle_promotion_input() {
 }
 
 void Game::step_game() {
-    draw_grid();
-    draw_pieces();
-    draw_legal_moves();
-
     if (is_selecting_promotion) {
-        render_promotion_board();
         handle_promotion_input();
     } else {
         handle_input();
     }
+
+    draw_grid();
+    draw_pieces();
+    draw_legal_moves();
+
+    if (is_selecting_promotion) render_promotion_board();
 }
