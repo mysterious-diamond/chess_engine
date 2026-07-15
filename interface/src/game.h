@@ -26,6 +26,8 @@ class Game {
     void step_game();
 
    private:
+    // VARIABLE DECLARATIONS
+    // ---------- Game State Variables ------------
     bool is_white_turn = true;
     bool is_en_passant_available = false;
     bool is_selecting_promotion = false;
@@ -40,31 +42,35 @@ class Game {
 
     bool is_placement_mode = false;
 
+    uint8_t selectedCell = 64;
+    uint8_t lastPlacedCell = 64;
+
+    std::unordered_map<uint8_t, uint8_t> last_checked_legal_moves;
+
+    // --------- Game Rendering Variables ---------
+
     Color whiteCell = {238, 238, 210, 255};
     Color greenCell = {118, 150, 86, 255};
 
     // using shorthands (e.g. wp = White Pawn, exceptions are Knights which are wn and bn)
     Texture2D wp, bp, wn, bn, wb, bb, wr, br, wq, bq, wk, bk;
 
-    uint8_t selectedCell;
-    uint8_t lastPlacedCell = 64;
-    
-    std::unordered_map<uint8_t, uint8_t> last_checked_legal_moves;
-
-    void draw_grid();
-    void draw_pieces();
-
+    // FUNCTION DECLARATIONS
+    // ------------------ General Helper Functions -------------------
     Texture2D get_piece_texture_on_cell(uint8_t i);
     uint64_t *get_piece_type_from_texture(Texture2D texture);
+
     void remove_piece_on_cell(uint8_t i);
     void remove_piece_on_cell_with_type(uint8_t i, uint64_t *piece_type);
 
     bool is_piece_white(uint8_t cell);
     bool is_cell_empty(uint8_t cell);
-    bool is_valid_target(uint8_t target, bool is_attacker_white);
 
     bool is_white_in_check();
     bool is_black_in_check();
+
+    // ---------------- Legal Move Fetching Functions ----------------
+    bool is_valid_target(uint8_t target, bool is_attacker_white);
 
     std::unordered_map<uint8_t, uint8_t> get_pawn_legal_moves(uint8_t i);
     std::unordered_map<uint8_t, uint8_t> get_rook_legal_moves(uint8_t i);
@@ -76,32 +82,41 @@ class Game {
     // a wrapper function for the functions above
     std::unordered_map<uint8_t, uint8_t> get_piece_legal_moves(uint8_t i);
 
-    // this function is to help the below function by trying a move then checking if the team
-    // who made the move is now in check because of that move. Then, in the below function,
-    // we would delete that move if this function returns true as it is not legal.
     bool try_move_and_check_if_in_check(uint8_t position, uint8_t target, uint8_t attacking_cell, uint64_t *piece_type);
 
     // this function is to check the moves you get from calling any of the functions above,
     // so that no legal moves will be able to put its own team in check.
-    std::unordered_map<uint8_t, uint8_t> get_strictly_legal_moves(std::unordered_map<uint8_t, uint8_t> legal_moves, uint8_t position, uint64_t *piece_type);
+    std::unordered_map<uint8_t, uint8_t> get_strictly_legal_moves(std::unordered_map<uint8_t, uint8_t> legal_moves, uint8_t position);
 
-    void move_piece(uint8_t cell, uint8_t attacking_cell, uint8_t destination, uint64_t *piece_type);
-    void place_piece(uint8_t cell, uint8_t attacking_cell, uint64_t *piece_type);
+    // ------------- White & Black Turn Handling Functions -----------
+    void move_piece(uint8_t cell, uint8_t cell_to_be_attacked, uint8_t destination, uint64_t *piece_type);
+    void place_piece(uint8_t cell, uint8_t cell_to_be_attacked, uint64_t *piece_type);
+
     void reset_placement_variables();
 
-    void handle_white_placement(uint8_t cell);
-    void handle_black_placement(uint8_t cell);
+    void handle_white_placement(uint8_t clickedCell);
+    void handle_black_placement(uint8_t clickedCell);
 
-    void check_castling_legality(std::unordered_map<uint8_t, uint8_t> &legal_moves, bool is_team_in_check, uint8_t cell);
+    void check_castling_legality(std::unordered_map<uint8_t, uint8_t> &legal_moves, bool is_team_in_check, uint8_t kingCell);
    
-    void handle_white_turn(uint8_t cell, Texture2D selectedCellType);
-    void handle_black_turn(uint8_t cell, Texture2D selectedCellType);
-    void handle_turn(uint8_t cell, Texture2D selectedCellType);
+    void handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture);
+    void handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture);
 
-    void handle_input();
-    void draw_legal_moves(); 
+    void handle_turn(uint8_t clickedCell, Texture2D selectedCellTexture);
 
+    // --------------------- Game Step Functions ---------------------
+    void draw_grid();
+    void draw_pieces();
+    void draw_legal_moves();
+    void handle_input(); 
+
+    // ------------------- Promotion UI Functions --------------------
     uint8_t get_pawn_promotion_cell();
+    void render_promotion_choices(int boardX, int boardY, int quadrant);
+
+    void handle_white_promotion_choice(int mouseCell, int promotionCell);
+    void handle_black_promotion_choice(int mouseCell, int promotionCell);
+
     void render_promotion_board();
     void handle_promotion_input();
  };
