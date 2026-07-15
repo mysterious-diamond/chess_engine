@@ -5,6 +5,7 @@
 #include "raylib.h"
 
 int main() {
+    SetTargetFPS(144);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chess Engine");
     Game game = Game();
 

@@ -59,7 +59,7 @@ EQUALS = =
 CMAKE_SOURCE_DIR = C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:\Users\tonys\onedrive\desktop\projects\projects\chess_engine\interface\build
+CMAKE_BINARY_DIR = C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface\build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -86,9 +86,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\tonys\onedrive\desktop\projects\projects\chess_engine\interface\build\CMakeFiles C:\Users\tonys\onedrive\desktop\projects\projects\chess_engine\interface\build\\CMakeFiles\progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface\build\CMakeFiles C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface\build\\CMakeFiles\progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\tonys\onedrive\desktop\projects\projects\chess_engine\interface\build\CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\tonys\OneDrive\Desktop\Projects\Projects\chess_engine\interface\build\CMakeFiles 0
 .PHONY : all
 
 # The main clean target

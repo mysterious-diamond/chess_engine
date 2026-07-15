@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include <cstdint>
+#include <iostream>
 #include <unordered_map>
 
 #include "raylib.h"
@@ -674,7 +675,7 @@ void Game::place_piece(uint8_t destination, uint8_t attacking_cell, uint64_t* pi
     } else if (destination / 8 == 7 || destination / 8 == 0) {
         is_selecting_promotion = true;
 
-        // switch back since its not time for black yet
+        // switch back since its not time for the other team yet
         is_white_turn = !is_white_turn;
     } else {
         is_en_passant_available = false;
@@ -967,13 +968,13 @@ void Game::draw_legal_moves() {
 
 uint8_t Game::get_pawn_promotion_cell() {
     for (int i = 56; i <= 63; i++) {
-        if (whitePawns ^ (1ull << i)) {
+        if (whitePawns & (1ull << i)) {
             return i;
         }
     }
 
     for (int i = 0; i <= 7; i++) {
-        if (blackPawns ^ (1ull << i)) {
+        if (blackPawns & (1ull << i)) {
             return i;
         }
     }
@@ -984,12 +985,21 @@ uint8_t Game::get_pawn_promotion_cell() {
 void Game::render_promotion_board() {
     int promotionCell = get_pawn_promotion_cell();
     if (promotionCell == -1) return;
+    if (!is_white_turn) {
+        // if is black turn, reverse the cell position so the menu appears upright.
+        // we can also do this by just changing the variables below, but it is simply easier to just change the promotionCell.
+        // Do note that the original promotionCell variable is correct, we are simply making things easier.
+
+        int promotionFile = promotionCell % 8;
+        int newPromotionRank = 8 - (promotionCell / 8) - 1;
+
+        promotionCell = promotionFile + newPromotionRank * 8;
+    }
 
     // Draw the promotion board
     int x = (promotionCell % 8) * 100;
     int y = (8 - promotionCell / 8 - 1) * 100;
 
-    if (!is_white_turn) y = 800 - y;
     DrawRectangle(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, WHITE);
     DrawRectangleLines(x, y, PROMOTION_BOARD_WIDTH, PROMOTION_BOARD_HEIGHT, BLACK);
 
@@ -999,10 +1009,10 @@ void Game::render_promotion_board() {
     int quadrant = PROMOTION_BOARD_HEIGHT / 4;
 
     // Define y coordinates
-    int queenY = y + quadrant * 0 * (is_white_turn ? 1 : -1);
-    int rookY = y + quadrant * 1 * (is_white_turn ? 1 : -1);
-    int knightY = y + quadrant * 2 * (is_white_turn ? 1 : -1);
-    int bishopY = y + quadrant * 3 * (is_white_turn ? 1 : -1);
+    int queenY = y + quadrant * 0;
+    int rookY = y + quadrant * 1;
+    int knightY = y + quadrant * 2;
+    int bishopY = y + quadrant * 3;
 
     // Draw queen
     Texture2D queenTexture = (is_white_turn ? wq : bq);
@@ -1025,6 +1035,57 @@ void Game::render_promotion_board() {
     DrawRectangleLines(x, rookY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
     DrawRectangleLines(x, knightY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
     DrawRectangleLines(x, bishopY, PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, BLACK);
+}
+
+void Game::handle_promotion_input() {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Vector2 mousePos = GetMousePosition();
+
+        int mouseFile = (int)mousePos.x / 100;
+        int mouseRank = 8 - ((int)mousePos.y / 100) - 1;
+
+        if (!is_white_turn) {
+            mouseRank = 8 - mouseRank - 1;
+        }
+        int mouseCell = mouseFile + mouseRank * 8;
+
+        int promotionCell = get_pawn_promotion_cell();
+        if (promotionCell == -1) return;
+
+        std::cout << mouseFile << " " << mouseRank << std::endl;
+
+        if (is_white_turn) {
+            std::unordered_map<uint8_t, uint64_t*> promotionSelectionCells;
+            promotionSelectionCells[promotionCell] = &whiteQueen;
+            promotionSelectionCells[promotionCell - 8] = &whiteRooks;
+            promotionSelectionCells[promotionCell - 16] = &whiteKnights;
+            promotionSelectionCells[promotionCell - 24] = &whiteBishops;
+
+            for (auto option : promotionSelectionCells) {
+                if (option.first != mouseCell) continue;
+
+                whitePawns ^= (1ull << promotionCell);
+                *(option.second) ^= (1ull << promotionCell);
+                is_selecting_promotion = false;
+                is_white_turn = false;
+            }
+        } else {
+            std::unordered_map<uint8_t, uint64_t*> promotionSelectionCells;
+            promotionSelectionCells[promotionCell] = &blackQueen;
+            promotionSelectionCells[promotionCell + 8] = &blackRooks;
+            promotionSelectionCells[promotionCell + 16] = &blackKnights;
+            promotionSelectionCells[promotionCell + 24] = &blackBishops;
+
+            for (auto option : promotionSelectionCells) {
+                if (option.first != mouseCell) continue;
+
+                blackPawns ^= (1ull << promotionCell);
+                *(option.second) ^= (1ull << promotionCell);
+                is_selecting_promotion = false;
+                is_white_turn = true;
+            }
+        }
+    }
 }
 
 void Game::step_game() {
