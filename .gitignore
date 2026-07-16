@@ -5,3 +5,5 @@ interface/build/CMakeCache.txt
 interface/build/compile_commands.json
 interface/build/cmake_install.cmake
 interface/build/CMakeFiles
+engine/target
+engine/Cargo.lock
