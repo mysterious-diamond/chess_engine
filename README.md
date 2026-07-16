@@ -5,7 +5,7 @@ I also conviniently had a half year period before I go back to school, so here i
 ## Features
   - Two modes, **NORMAL MODE** where you can play with your friends (or yourself if you dont have any), and **BOT MODE** where you play against the actual chess engine
   - The chess is complete, castling, promoting, and even En Passant.
-  - Two executables. One for the chess itself and one for the engine.
+  - This engine is made by cross linking cpp and rust
   - No external libraries needed, all is included inside the repo. 
   - Completely open source, feel free to tweak in any way you like.
   - Made using the **RAYLIB** library. Its very cool, props to raysan5, it's creator. Check it out on https://github.com/raysan5/raylib.
