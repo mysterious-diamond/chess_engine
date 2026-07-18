@@ -11,6 +11,8 @@ add_executable(chess
 target_sources(chess PRIVATE
     src/game.h
     src/game.cpp
+    ../logic/logic.h
+    ../logic/logic.cpp
 )
 
 target_include_directories(chess PRIVATE

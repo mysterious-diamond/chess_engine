@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include "raylib.h"
+#include "../../logic/logic.h"
 
 // define macros
 #define SCREEN_HEIGHT 800

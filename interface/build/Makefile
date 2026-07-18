@@ -128,6 +128,30 @@ chess/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/build
 .PHONY : chess/fast
 
+C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.obj: C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.obj
+.PHONY : C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.obj
+
+# target to build an object file
+C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.obj
+.PHONY : C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.obj
+
+C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.i: C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.i
+.PHONY : C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.i
+
+# target to preprocess a source file
+C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.i
+.PHONY : C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.i
+
+C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.s: C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.s
+.PHONY : C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.s
+
+# target to generate assembly for a file
+C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.s
+.PHONY : C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.s
+
 src/game.obj: src/game.cpp.obj
 .PHONY : src/game.obj
 
@@ -185,6 +209,9 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... chess
+	@echo ... C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.obj
+	@echo ... C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.i
+	@echo ... C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.s
 	@echo ... src/game.obj
 	@echo ... src/game.i
 	@echo ... src/game.s
