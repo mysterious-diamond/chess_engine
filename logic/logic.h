@@ -35,6 +35,10 @@ extern bool is_black_short_castle_available;
 extern "C" {
 
 uint64_t* get_piece_type_on_cell(uint8_t cell);
+
+void handle_promotion(uint64_t *chosen_promotion_type);
+uint8_t get_promotion_pawn_cell();
+
 bool is_piece_on_cell_white(uint8_t cell); 
 bool is_cell_empty(uint8_t cell);
 
@@ -53,11 +57,13 @@ void get_piece_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell);
 void make_move(uint64_t* piece_type, uint16_t move);
 void remove_piece_on_cell(uint8_t cell);
 
+bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move); 
+
 // Some moves might cause the friendly team to be in check, however of course,
 // this makes the move illegal. This function is to filter out those moves
 // This function also checks castle rights
 void get_strictly_legal_moves(uint16_t (*legal_moves)[27]);
 
 bool is_in_check(bool is_checking_white);
-bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move); 
+uint16_t get_move_from_destination_in_legal_moves(uint16_t (*legal_moves)[27], uint8_t destination_to_check);
 }

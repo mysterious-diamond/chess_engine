@@ -35,6 +35,24 @@ uint64_t* get_piece_type_on_cell(uint8_t cell) {
     return nullptr;
 }
 
+void handle_promotion(uint64_t* chosen_promotion_type) {}
+
+uint8_t get_promotion_pawn_cell() {
+    for (int i = 56; i <= 63; i++) {
+        if (board.whitePawns & (1ull << i)) {
+            return i;
+        }
+    }
+
+    for (int i = 0; i <= 7; i++) {
+        if (board.blackPawns & (1ull << i)) {
+            return i;
+        }
+    }
+
+    return 64;
+}
+
 bool is_piece_on_cell_white(uint8_t cell) {
     uint64_t piece_type = *get_piece_type_on_cell(cell);
 
@@ -515,6 +533,28 @@ void make_move(uint64_t* piece_type, uint16_t move) {
     if (is_capture) {
         uint8_t attack_pos = (is_en_passant ? last_placed_cell : new_pos);
         remove_piece_on_cell(attack_pos);
+    } else if (is_castle) {
+        if (original_pos == new_pos + 2) {
+            uint64_t* rook_type = get_piece_type_on_cell(new_pos - 2);
+
+            *rook_type ^= (1ull << (new_pos - 2));
+            *rook_type ^= (1ull << (new_pos + 1));
+
+            if (new_pos - 2 == 0)
+                is_white_long_castle_available = false;
+            else
+                is_white_long_castle_available = false;
+        } else if (original_pos == new_pos - 2) {
+            uint64_t* rook_type = get_piece_type_on_cell(new_pos + 1);
+
+            *rook_type ^= (1ull << (new_pos + 1));
+            *rook_type ^= (1ull << (new_pos - 1));
+
+            if (new_pos - 2 == 0)
+                is_white_short_castle_available = false;
+            else
+                is_black_short_castle_available = false;
+        }
     }
 
     *piece_type ^= (1ull << original_pos);
@@ -595,4 +635,13 @@ bool is_in_check(bool is_checking_white) {
     }
 
     return false;
+}
+
+uint16_t is_move_in_legal_moves(uint16_t (*legal_moves)[27], uint8_t destination_to_check) {
+    for (uint16_t move : *legal_moves) {
+        uint8_t destination = move & (64ull << 4);
+        if (destination == destination_to_check) return move;
+    }
+
+    return 0;
 }

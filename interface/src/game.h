@@ -1,9 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <unordered_map>
 #include "raylib.h"
-#include "../../logic/logic.h"
 
 // define macros
 #define SCREEN_HEIGHT 800
@@ -40,7 +38,7 @@ class Game {
     uint8_t selectedCell = 64;
     uint8_t lastPlacedCell = 64;
 
-    std::unordered_map<uint8_t, uint8_t> last_checked_legal_moves;
+    uint16_t last_checked_legal_moves[27];
 
     // --------- Game Rendering Variables ---------
 
@@ -72,7 +70,6 @@ class Game {
     void handle_input(); 
 
     // ------------------- Promotion UI Functions --------------------
-    uint8_t get_pawn_promotion_cell();
     void render_promotion_choices(int boardX, int boardY, int quadrant);
 
     void handle_white_promotion_choice(int mouseCell, int promotionCell);
