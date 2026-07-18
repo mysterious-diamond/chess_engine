@@ -5,97 +5,7 @@
 
 #include "raylib.h"
 
-uint64_t initializePawns(bool isWhite) {
-    uint64_t result = 0;
-    if (isWhite) {
-        for (int i = 8; i < 16; i++) {
-            result += (1ull << i);
-        }
-    } else {
-        for (int i = 55; i > 47; i--) {
-            result += (1ull << i);
-        }
-    }
-
-    return result;
-}
-
-uint64_t initializeRooks(bool isWhite) {
-    uint64_t result = 0;
-    if (isWhite) {
-        result += 1;
-        result += 1ull << 7;
-    } else {
-        result += 1ull << 56;
-        result += 1ull << 63;
-    }
-
-    return result;
-}
-
-uint64_t initializeKnights(bool isWhite) {
-    uint64_t result = 0;
-    if (isWhite) {
-        result += 1ull << 1;
-        result += 1ull << 6;
-    } else {
-        result += 1ull << 57;
-        result += 1ull << 62;
-    }
-
-    return result;
-}
-
-uint64_t initializeBishops(bool isWhite) {
-    uint64_t result = 0;
-    if (isWhite) {
-        result += 1ull << 2;
-        result += 1ull << 5;
-    } else {
-        result += 1ull << 58;
-        result += 1ull << 61;
-    }
-
-    return result;
-}
-
-uint64_t initializeQueen(bool isWhite) {
-    uint64_t result = 0;
-    if (isWhite) {
-        result += 1ull << 3;
-    } else {
-        result += 1ull << 59;
-    }
-
-    return result;
-}
-
-uint64_t initializeKing(bool isWhite) {
-    uint64_t result = 0;
-    if (isWhite) {
-        result += 1ull << 4;
-    } else {
-        result += 1ull << 60;
-    }
-
-    return result;
-}
-
 Game::Game() {
-    whitePawns = initializePawns(true);
-    whiteRooks = initializeRooks(true);
-    whiteKnights = initializeKnights(true);
-    whiteBishops = initializeBishops(true);
-    whiteQueen = initializeQueen(true);
-    whiteKing = initializeKing(true);
-
-    blackPawns = initializePawns(false);
-    blackRooks = initializeRooks(false);
-    blackKnights = initializeKnights(false);
-    blackBishops = initializeBishops(false);
-    blackQueen = initializeQueen(false);
-    blackKing = initializeKing(false);
-
     wp = LoadTexture(R"(../images/wp.png)");
     wr = LoadTexture(R"(../images/wr.png)");
     wn = LoadTexture(R"(../images/wn.png)");
@@ -116,254 +26,55 @@ Game::Game() {
 Texture2D Game::get_piece_texture_on_cell(uint8_t i) {
     if (i == 64) return {0};
 
-    if (this->whitePawns & (1ull << i)) {
+    if (board.whitePawns & (1ull << i)) {
         return wp;
     }
 
-    if (this->whiteRooks & (1ull << i)) {
+    if (board.whiteRooks & (1ull << i)) {
         return wr;
     }
 
-    if (this->whiteKnights & (1ull << i)) {
+    if (board.whiteKnights & (1ull << i)) {
         return wn;
     }
 
-    if (this->whiteBishops & (1ull << i)) {
+    if (board.whiteBishops & (1ull << i)) {
         return wb;
     }
 
-    if (this->whiteQueen & (1ull << i)) {
+    if (board.whiteQueens & (1ull << i)) {
         return wq;
     }
 
-    if (this->whiteKing & (1ull << i)) {
+    if (board.whiteKing & (1ull << i)) {
         return wk;
     }
 
-    if (this->blackPawns & (1ull << i)) {
+    if (board.blackPawns & (1ull << i)) {
         return bp;
     }
 
-    if (this->blackRooks & (1ull << i)) {
+    if (board.blackRooks & (1ull << i)) {
         return br;
     }
 
-    if (this->blackKnights & (1ull << i)) {
+    if (board.blackKnights & (1ull << i)) {
         return bn;
     }
 
-    if (this->blackBishops & (1ull << i)) {
+    if (board.blackBishops & (1ull << i)) {
         return bb;
     }
 
-    if (this->blackQueen & (1ull << i)) {
+    if (board.blackQueens & (1ull << i)) {
         return bq;
     }
 
-    if (this->blackKing & (1ull << i)) {
+    if (board.blackKing & (1ull << i)) {
         return bk;
     }
 
     return {0};
-}
-
-uint64_t* Game::get_piece_type_from_texture(Texture2D texture) {
-    if (texture.id == wp.id)
-        return &whitePawns;
-    else if (texture.id == wr.id)
-        return &whiteRooks;
-    else if (texture.id == wn.id)
-        return &whiteKnights;
-    else if (texture.id == wb.id)
-        return &whiteBishops;
-    else if (texture.id == wq.id)
-        return &whiteQueen;
-    else if (texture.id == wk.id)
-        return &whiteKing;
-    else if (texture.id == bp.id)
-        return &blackPawns;
-    else if (texture.id == br.id)
-        return &blackRooks;
-    else if (texture.id == bn.id)
-        return &blackKnights;
-    else if (texture.id == bb.id)
-        return &blackBishops;
-    else if (texture.id == bq.id)
-        return &blackQueen;
-    else if (texture.id == bk.id)
-        return &blackKing;
-
-    return nullptr;
-}
-
-void Game::remove_piece_on_cell_with_type(uint8_t cell, uint64_t* piece_type) { *piece_type ^= 1ull << cell; }
-
-void Game::remove_piece_on_cell(uint8_t i) {
-    if (i == 64) return;
-
-    Texture2D texture = get_piece_texture_on_cell(i);
-    if (!texture.id) return;
-
-    uint64_t* type = get_piece_type_from_texture(get_piece_texture_on_cell(i));
-    remove_piece_on_cell_with_type(i, type);
-}
-
-bool Game::is_valid_target(uint8_t target, bool is_attacker_white) {
-    uint8_t file = target % 8;
-    uint8_t rank = target / 8;
-
-    if (file > 7 || file < 0) return false;
-    if (rank > 7 || rank < 0) return false;
-
-    bool is_target_white = is_piece_white(target);
-    bool is_empty = is_cell_empty(target);
-    return is_empty || is_target_white != is_attacker_white;
-}
-
-std::unordered_map<uint8_t, uint8_t> Game::get_piece_legal_moves(uint8_t i) {
-    Texture2D texture = get_piece_texture_on_cell(i);
-
-    if (texture.id == wp.id || texture.id == bp.id)
-        return get_pawn_legal_moves(i);
-    else if (texture.id == wr.id || texture.id == br.id)
-        return get_rook_legal_moves(i);
-    else if (texture.id == wn.id || texture.id == bn.id)
-        return get_knight_legal_moves(i);
-    else if (texture.id == wb.id || texture.id == bb.id)
-        return get_bishop_legal_moves(i);
-    else if (texture.id == wq.id || texture.id == bq.id)
-        return get_queen_legal_moves(i);
-    else if (texture.id == wk.id || texture.id == bk.id)
-        return get_king_legal_moves(i);
-
-    return {};
-}
-
-bool Game::try_move_and_check_if_in_check(uint8_t position, uint8_t target, uint8_t attacking_cell, uint64_t* piece_type) {
-    Texture2D last_piece = get_piece_texture_on_cell(attacking_cell);
-    move_piece(position, attacking_cell, target, piece_type);
-
-    bool did_move_cause_check = false;
-    if (is_white_turn && is_white_in_check()) {
-        did_move_cause_check = true;
-    } else if (!is_white_turn && is_black_in_check()) {
-        did_move_cause_check = true;
-    }
-
-    move_piece(target, position, position, piece_type);
-
-    if (last_piece.id) {
-        uint64_t* type = get_piece_type_from_texture(last_piece);
-        *type ^= (1ull << attacking_cell);
-    }
-
-    if (did_move_cause_check) return true;
-    return false;
-}
-
-std::unordered_map<uint8_t, uint8_t> Game::get_strictly_legal_moves(std::unordered_map<uint8_t, uint8_t> legal_moves,
-                                                                    uint8_t position) {
-    std::unordered_map<uint8_t, uint8_t> strictly_legal_moves;
-
-    Texture2D piece_texture = get_piece_texture_on_cell(position);
-    uint64_t* piece_type = get_piece_type_from_texture(piece_texture);
-
-    for (auto move : legal_moves) {
-        bool result = try_move_and_check_if_in_check(position, move.first, move.second, piece_type);
-        if (!result) strictly_legal_moves[move.first] = move.second;
-    }
-
-    return strictly_legal_moves;
-}
-
-void Game::move_piece(uint8_t cell, uint8_t cell_to_be_attacked, uint8_t destination, uint64_t* piece_type) {
-    remove_piece_on_cell(cell_to_be_attacked);
-
-    *piece_type ^= 1ull << cell;
-    *piece_type ^= 1ull << destination;
-    lastPlacedCell = destination;
-}
-
-void Game::place_piece(uint8_t destination, uint8_t cell_to_be_attacked, uint64_t* piece_type) {
-    move_piece(selectedCell, cell_to_be_attacked, destination, piece_type);
-    is_white_turn = !is_white_turn;
-
-    // Enables en passant move if a pawn went 16 spaces forward
-    bool is_piece_pawn = (*piece_type == whitePawns || *piece_type == blackPawns);
-    if (!is_piece_pawn) {
-        is_en_passant_available = false;
-        return;
-    }
-
-    if ((destination == selectedCell + 16 || destination == selectedCell - 16)) {
-        is_en_passant_available = true;
-    } else if (destination / 8 == 7 || destination / 8 == 0) {
-        is_selecting_promotion = true;
-
-        // switch back since its not time for the other team yet
-        is_white_turn = !is_white_turn;
-    } else {
-        is_en_passant_available = false;
-    }
-}
-
-bool Game::is_piece_white(uint8_t cell) {
-    Texture2D type = get_piece_texture_on_cell(cell);
-
-    // This early return is for empty cells
-    if (!type.id) return false;
-
-    if (type.id == wp.id || type.id == wb.id || type.id == wn.id || type.id == wr.id || type.id == wq.id || type.id == wk.id)
-        return true;
-    else
-        return false;
-}
-
-bool Game::is_cell_empty(uint8_t cell) {
-    Texture2D type = get_piece_texture_on_cell(cell);
-    return !type.id;
-}
-
-bool Game::is_white_in_check() {
-    uint8_t white_king_cell;
-    for (int i = 0; i < 64; i++) {
-        if (whiteKing & (1ull << i)) {
-            white_king_cell = i;
-        }
-    }
-
-    for (int i = 0; i < 64; i++) {
-        uint64_t shift = (1ull << i);
-
-        if ((blackPawns & shift) && get_pawn_legal_moves(i)[white_king_cell]) return true;
-        if ((blackRooks & shift) && get_rook_legal_moves(i)[white_king_cell]) return true;
-        if ((blackKnights & shift) && get_knight_legal_moves(i)[white_king_cell]) return true;
-        if ((blackBishops & shift) && get_bishop_legal_moves(i)[white_king_cell]) return true;
-        if ((blackQueen & shift) && get_queen_legal_moves(i)[white_king_cell]) return true;
-    }
-
-    return false;
-}
-
-bool Game::is_black_in_check() {
-    uint8_t black_king_cell;
-    for (int i = 0; i < 64; i++) {
-        if (blackKing & (1ull << i)) {
-            black_king_cell = i;
-        }
-    }
-
-    for (int i = 0; i < 64; i++) {
-        uint64_t shift = (1ull << i);
-
-        if ((whitePawns & shift) && get_pawn_legal_moves(i)[black_king_cell]) return true;
-        if ((whiteRooks & shift) && get_rook_legal_moves(i)[black_king_cell]) return true;
-        if ((whiteKnights & shift) && get_knight_legal_moves(i)[black_king_cell]) return true;
-        if ((whiteBishops & shift) && get_bishop_legal_moves(i)[black_king_cell]) return true;
-        if ((whiteQueen & shift) && get_queen_legal_moves(i)[black_king_cell]) return true;
-    }
-
-    return false;
 }
 
 void Game::reset_placement_variables() {
@@ -431,23 +142,6 @@ void Game::handle_black_placement(uint8_t clickedCell) {
     }
 
     reset_placement_variables();
-}
-
-void Game::check_castling_legality(std::unordered_map<uint8_t, uint8_t>& legal_moves, bool is_team_in_check, uint8_t kingCell) {
-    // if long castle position exists, check if either the current position is in check,
-    // or the square in which it skips is in check. If so, the move is illegal and shall
-    // be deleted. Same logic goes for second if statement.
-    if (legal_moves.count(kingCell - 2)) {
-        if (is_team_in_check || !legal_moves.count(kingCell - 1)) {
-            legal_moves.erase(kingCell - 2);
-        }
-    }
-
-    if (legal_moves.count(kingCell + 2)) {
-        if (is_team_in_check || !legal_moves.count(kingCell + 1)) {
-            legal_moves.erase(kingCell + 2);
-        }
-    }
 }
 
 void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture) {

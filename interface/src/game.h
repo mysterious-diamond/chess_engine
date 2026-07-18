@@ -16,13 +16,6 @@
 
 class Game {
    public:
-    uint64_t whitePawns, blackPawns;
-    uint64_t whiteKnights, blackKnights;
-    uint64_t whiteBishops, blackBishops;
-    uint64_t whiteRooks, blackRooks;
-    uint64_t whiteQueen, blackQueen;
-    uint64_t whiteKing, blackKing;
-
     Game();
     void step_game();
     double evaluate_game();
@@ -60,47 +53,13 @@ class Game {
     // FUNCTION DECLARATIONS
     // ------------------ General Helper Functions -------------------
     Texture2D get_piece_texture_on_cell(uint8_t i);
-    uint64_t *get_piece_type_from_texture(Texture2D texture);
-
-    void remove_piece_on_cell(uint8_t i);
-    void remove_piece_on_cell_with_type(uint8_t i, uint64_t *piece_type);
-
-    bool is_piece_white(uint8_t cell);
-    bool is_cell_empty(uint8_t cell);
-
-    bool is_white_in_check();
-    bool is_black_in_check();
-
-    // ---------------- Legal Move Fetching Functions ----------------
-    bool is_valid_target(uint8_t target, bool is_attacker_white);
-
-    std::unordered_map<uint8_t, uint8_t> get_pawn_legal_moves(uint8_t i);
-    std::unordered_map<uint8_t, uint8_t> get_rook_legal_moves(uint8_t i);
-    std::unordered_map<uint8_t, uint8_t> get_bishop_legal_moves(uint8_t i);
-    std::unordered_map<uint8_t, uint8_t> get_knight_legal_moves(uint8_t i);
-    std::unordered_map<uint8_t, uint8_t> get_queen_legal_moves(uint8_t i);
-    std::unordered_map<uint8_t, uint8_t> get_king_legal_moves(uint8_t i);
-
-    // a wrapper function for the functions above
-    std::unordered_map<uint8_t, uint8_t> get_piece_legal_moves(uint8_t i);
-
-    bool try_move_and_check_if_in_check(uint8_t position, uint8_t target, uint8_t attacking_cell, uint64_t *piece_type);
-
-    // this function is to check the moves you get from calling any of the functions above,
-    // so that no legal moves will be able to put its own team in check.
-    std::unordered_map<uint8_t, uint8_t> get_strictly_legal_moves(std::unordered_map<uint8_t, uint8_t> legal_moves, uint8_t position);
 
     // ------------- White & Black Turn Handling Functions -----------
-    void move_piece(uint8_t cell, uint8_t cell_to_be_attacked, uint8_t destination, uint64_t *piece_type);
-    void place_piece(uint8_t cell, uint8_t cell_to_be_attacked, uint64_t *piece_type);
-
     void reset_placement_variables();
 
     void handle_white_placement(uint8_t clickedCell);
-    void handle_black_placement(uint8_t clickedCell);
+    void handle_black_placement(uint8_t clickedCell);   
 
-    void check_castling_legality(std::unordered_map<uint8_t, uint8_t> &legal_moves, bool is_team_in_check, uint8_t kingCell);
-   
     void handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture);
     void handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture);
 
