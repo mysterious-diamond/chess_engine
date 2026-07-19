@@ -21,23 +21,10 @@ class Game {
    private:
     // VARIABLE DECLARATIONS
     // ---------- Game State Variables ------------
-    bool is_white_turn = true;
-    bool is_en_passant_available = false;
     bool is_selecting_promotion = false;
-    bool white_in_check = false;
-    bool black_in_check = false;
-
-    bool is_white_short_castle_available = true;
-    bool is_white_long_castle_available = true;
-
-    bool is_black_long_castle_available = true;
-    bool is_black_short_castle_available = true;
-
     bool is_placement_mode = false;
 
     uint8_t selectedCell = 64;
-    uint8_t lastPlacedCell = 64;
-
     uint16_t last_checked_legal_moves[27];
 
     // --------- Game Rendering Variables ---------

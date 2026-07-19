@@ -23,6 +23,8 @@ extern Board board;
 extern uint8_t last_placed_cell;
 
 extern bool is_en_passant_available;
+extern bool is_white_turn;
+
 extern bool white_in_check;
 extern bool black_in_check;
 
@@ -54,6 +56,7 @@ void get_queen_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell);
 void get_king_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell);
 void get_piece_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell);
 
+void handle_move(uint64_t *piece_type, uint16_t move);
 void make_move(uint64_t* piece_type, uint16_t move);
 void remove_piece_on_cell(uint8_t cell);
 
@@ -62,7 +65,7 @@ bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move
 // Some moves might cause the friendly team to be in check, however of course,
 // this makes the move illegal. This function is to filter out those moves
 // This function also checks castle rights
-void get_strictly_legal_moves(uint16_t (*legal_moves)[27]);
+void get_strictly_legal_moves(uint64_t *piece_type, uint16_t (*legal_moves)[27]);
 
 bool is_in_check(bool is_checking_white);
 uint16_t get_move_from_destination_in_legal_moves(uint16_t (*legal_moves)[27], uint8_t destination_to_check);

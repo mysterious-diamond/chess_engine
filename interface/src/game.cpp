@@ -96,13 +96,6 @@ void Game::handle_white_placement(uint8_t clickedCell) {
     if (move) {
         uint64_t* piece_type = get_piece_type_on_cell(selectedCell);
         make_move(piece_type, move);
-
-        if (texture.id == wr.id) {
-            if (is_white_long_castle_available && selectedCell == 0)
-                is_white_long_castle_available = false;
-            else if (is_white_short_castle_available && selectedCell == 7)
-                is_white_short_castle_available = false;
-        }
     }
 
     reset_placement_variables();
@@ -119,13 +112,6 @@ void Game::handle_black_placement(uint8_t clickedCell) {
     if (move) {
         uint64_t* piece_type = get_piece_type_on_cell(selectedCell);
         make_move(piece_type, move);
-
-        if (texture.id == br.id) {
-            if (is_black_long_castle_available && selectedCell == 56)
-                is_black_long_castle_available = false;
-            else if (is_black_short_castle_available && selectedCell == 63)
-                is_black_short_castle_available = false;
-        }
     }
 
     reset_placement_variables();
@@ -141,7 +127,7 @@ void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
     uint64_t* type = get_piece_type_on_cell(clickedCell);
 
     get_piece_legal_moves(&last_checked_legal_moves, clickedCell);
-    get_strictly_legal_moves(&last_checked_legal_moves);
+    get_strictly_legal_moves(type, &last_checked_legal_moves);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -154,11 +140,10 @@ void Game::handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
     }
 
     if (is_piece_on_cell_white(clickedCell) && !is_cell_empty(clickedCell)) return;
-
     uint64_t* type = get_piece_type_on_cell(clickedCell);
 
     get_piece_legal_moves(&last_checked_legal_moves, clickedCell);
-    get_strictly_legal_moves(&last_checked_legal_moves);
+    get_strictly_legal_moves(type, &last_checked_legal_moves);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -186,19 +171,19 @@ void Game::handle_input() {
 
         if (!is_white_turn) clickedCell = clickedFile + (8 - clickedRank - 1) * 8;
 
-        Texture2D cell_type = get_piece_texture_on_cell(clickedCell);
+        Texture2D cell_texture = get_piece_texture_on_cell(clickedCell);
 
         if (is_placement_mode) {
-            handle_turn(clickedCell, cell_type);
+            handle_turn(clickedCell, cell_texture);
             return;
         }
 
-        if (!cell_type.id) {
+        if (is_cell_empty(clickedCell)) {
             std::memset(last_checked_legal_moves, 0, sizeof(last_checked_legal_moves));
             return;
         }
 
-        handle_turn(clickedCell, cell_type);
+        handle_turn(clickedCell, cell_texture);
     }
 }
 
@@ -251,7 +236,7 @@ void Game::draw_pieces() {
 
 void Game::draw_legal_moves() {
     for (auto move : last_checked_legal_moves) {
-        uint8_t target_cell = move & (64ull << 4);
+        uint8_t target_cell = move & (63ull << 4);
 
         uint8_t file = target_cell % 8;
         uint8_t rank = target_cell / 8;
@@ -334,10 +319,8 @@ void Game::handle_white_promotion_choice(int mouseCell, int promotionCell) {
     for (auto option : promotionSelectionCells) {
         if (option.first != mouseCell) continue;
 
-        whitePawns ^= (1ull << promotionCell);
-        *(option.second) ^= (1ull << promotionCell);
+        handle_promotion(option.second);
         is_selecting_promotion = false;
-        is_white_turn = false;
     }
 }
 
@@ -351,10 +334,8 @@ void Game::handle_black_promotion_choice(int mouseCell, int promotionCell) {
     for (auto option : promotionSelectionCells) {
         if (option.first != mouseCell) continue;
 
-        blackPawns ^= (1ull << promotionCell);
-        *(option.second) ^= (1ull << promotionCell);
+        handle_promotion(option.second);
         is_selecting_promotion = false;
-        is_white_turn = true;
     }
 }
 
@@ -395,4 +376,4 @@ void Game::step_game() {
     if (is_selecting_promotion) render_promotion_board();
 }
 
-double evaluate_game() { double score = 0; }
+double evaluate_game() { return 0.0; }
