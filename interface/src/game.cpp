@@ -95,7 +95,9 @@ void Game::handle_white_placement(uint8_t clickedCell) {
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves, clickedCell);
     if (move) {
         uint64_t* piece_type = get_piece_type_on_cell(selectedCell);
-        make_move(piece_type, move);
+        handle_move(piece_type, move);
+
+        if (get_promotion_pawn_cell() != 64) is_selecting_promotion = true;
     }
 
     reset_placement_variables();
@@ -108,10 +110,12 @@ void Game::handle_black_placement(uint8_t clickedCell) {
     uint16_t legal_moves[27];
     std::memcpy(legal_moves, last_checked_legal_moves, sizeof(legal_moves));
 
-    uint8_t move = get_move_from_destination_in_legal_moves(&legal_moves, clickedCell);
+    uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves, clickedCell);
     if (move) {
         uint64_t* piece_type = get_piece_type_on_cell(selectedCell);
-        make_move(piece_type, move);
+        handle_move(piece_type, move);
+
+        if (get_promotion_pawn_cell() != 64) is_selecting_promotion = true;
     }
 
     reset_placement_variables();
@@ -166,7 +170,7 @@ void Game::handle_input() {
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         uint8_t clickedFile = (int)mousePos.x / CELL_SIZE;
-        uint8_t clickedRank = (SCREEN_HEIGHT - (int)mousePos.y) / CELL_SIZE;
+        uint8_t clickedRank = 7 - ((int)mousePos.y / CELL_SIZE);
         uint8_t clickedCell = clickedFile + clickedRank * 8;
 
         if (!is_white_turn) clickedCell = clickedFile + (8 - clickedRank - 1) * 8;
@@ -235,8 +239,10 @@ void Game::draw_pieces() {
 }
 
 void Game::draw_legal_moves() {
-    for (auto move : last_checked_legal_moves) {
-        uint8_t target_cell = move & (63ull << 4);
+    for (uint16_t move : last_checked_legal_moves) {
+        if (move == 0) break;
+
+        uint8_t target_cell = (move >> 4) & 63ull;
 
         uint8_t file = target_cell % 8;
         uint8_t rank = target_cell / 8;
@@ -286,7 +292,7 @@ void Game::render_promotion_choices(int boardX, int boardY, int quadrant) {
 
 void Game::render_promotion_board() {
     int promotionCell = get_promotion_pawn_cell();
-    if (promotionCell == -1) return;
+    if (promotionCell == 64) return;
     if (!is_white_turn) {
         // if is black turn, reverse the cell position so the menu appears upright.
         // we can also do this by just changing the variables below, but it is simply easier to just change the promotionCell.
@@ -352,7 +358,7 @@ void Game::handle_promotion_input() {
         int mouseCell = mouseFile + mouseRank * 8;
 
         int promotionCell = get_promotion_pawn_cell();
-        if (promotionCell == -1) return;
+        if (promotionCell == 64) return;
 
         if (is_white_turn) {
             handle_white_promotion_choice(mouseCell, promotionCell);
@@ -376,4 +382,4 @@ void Game::step_game() {
     if (is_selecting_promotion) render_promotion_board();
 }
 
-double evaluate_game() { return 0.0; }
+double Game::evaluate_game() { return 0.0; }

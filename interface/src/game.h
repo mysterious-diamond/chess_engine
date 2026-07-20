@@ -25,7 +25,7 @@ class Game {
     bool is_placement_mode = false;
 
     uint8_t selectedCell = 64;
-    uint16_t last_checked_legal_moves[27];
+    uint16_t last_checked_legal_moves[27] = {};
 
     // --------- Game Rendering Variables ---------
 
