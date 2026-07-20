@@ -20,6 +20,8 @@ bool is_black_long_castle_available = true;
 bool is_black_short_castle_available = true;
 
 uint64_t* get_piece_type_on_cell(uint8_t cell) {
+    if (cell >= 64) return nullptr;
+
     if (board.whitePawns & (1ull << cell)) return &board.whitePawns;
     if (board.whiteRooks & (1ull << cell)) return &board.whiteRooks;
     if (board.whiteKnights & (1ull << cell)) return &board.whiteKnights;
@@ -105,6 +107,7 @@ uint16_t generate_move(uint8_t original_pos, uint8_t destination, bool is_en_pas
 
 void get_pawn_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
     // Make sure array is set to 0 so it doesnt return garbage values
+    std::memset(legal_moves, 0, sizeof(*legal_moves));
 
     bool is_white = is_piece_on_cell_white(cell);
     int direction = (is_white ? 1 : -1);
@@ -251,6 +254,7 @@ void get_rook_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
             (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            amount_of_moves++;
             break;
         } else {
             break;
@@ -522,6 +526,8 @@ void get_king_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
 
 void get_piece_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
     std::memset(legal_moves, 0, sizeof(*legal_moves));
+    if (cell < 0 || cell > 63) return;
+
     uint64_t* piece_type = get_piece_type_on_cell(cell);
 
     if (piece_type == &board.whitePawns || piece_type == &board.blackPawns) {
@@ -566,14 +572,12 @@ void handle_move(uint64_t* piece_type, uint16_t move) {
             is_black_short_castle_available = false;
     }
 
-    if (is_castle) {
-        if (is_white_turn) {
-            is_white_long_castle_available = false;
-            is_white_short_castle_available = false;
-        } else {
-            is_black_long_castle_available = false;
-            is_black_short_castle_available = false;
-        }
+    if (*piece_type == board.whiteKing) {
+        is_white_long_castle_available = false;
+        is_white_short_castle_available = false;
+    } else if (*piece_type == board.blackKing) {
+        is_black_long_castle_available = false;
+        is_black_short_castle_available = false;
     }
 
     uint8_t pawn_promotion_cell = get_promotion_pawn_cell();

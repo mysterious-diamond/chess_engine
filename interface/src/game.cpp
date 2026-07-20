@@ -23,6 +23,7 @@ Game::Game() {
     bk = LoadTexture(R"(../images/bk.png)");
 
     selectedCell = 64;
+    std::memset(last_checked_legal_moves, 0, sizeof(*last_checked_legal_moves));
 }
 
 Texture2D Game::get_piece_texture_on_cell(uint8_t i) {
@@ -173,6 +174,7 @@ void Game::handle_input() {
         uint8_t clickedRank = 7 - ((int)mousePos.y / CELL_SIZE);
         uint8_t clickedCell = clickedFile + clickedRank * 8;
 
+        if (clickedCell < 0 || clickedCell > 63) return;
         if (!is_white_turn) clickedCell = clickedFile + (8 - clickedRank - 1) * 8;
 
         Texture2D cell_texture = get_piece_texture_on_cell(clickedCell);
