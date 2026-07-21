@@ -190,51 +190,51 @@ void Game::render_promotion_board() {
 Texture2D Game::get_piece_texture_on_cell(uint8_t i) {
     if (i == 64) return {0};
 
-    if (board.whitePawns & (1ull << i)) {
+    if (board.white_pawns & (1ull << i)) {
         return wp;
     }
 
-    if (board.whiteRooks & (1ull << i)) {
+    if (board.white_rooks & (1ull << i)) {
         return wr;
     }
 
-    if (board.whiteKnights & (1ull << i)) {
+    if (board.white_knights & (1ull << i)) {
         return wn;
     }
 
-    if (board.whiteBishops & (1ull << i)) {
+    if (board.white_bishops & (1ull << i)) {
         return wb;
     }
 
-    if (board.whiteQueens & (1ull << i)) {
+    if (board.white_queens & (1ull << i)) {
         return wq;
     }
 
-    if (board.whiteKing & (1ull << i)) {
+    if (board.white_king & (1ull << i)) {
         return wk;
     }
 
-    if (board.blackPawns & (1ull << i)) {
+    if (board.black_pawns & (1ull << i)) {
         return bp;
     }
 
-    if (board.blackRooks & (1ull << i)) {
+    if (board.black_rooks & (1ull << i)) {
         return br;
     }
 
-    if (board.blackKnights & (1ull << i)) {
+    if (board.black_knights & (1ull << i)) {
         return bn;
     }
 
-    if (board.blackBishops & (1ull << i)) {
+    if (board.black_bishops & (1ull << i)) {
         return bb;
     }
 
-    if (board.blackQueens & (1ull << i)) {
+    if (board.black_queens & (1ull << i)) {
         return bq;
     }
 
-    if (board.blackKing & (1ull << i)) {
+    if (board.black_king & (1ull << i)) {
         return bk;
     }
 
@@ -360,10 +360,10 @@ void Game::render_promotion_choices(int boardX, int boardY, int quadrant) {
 
 void Game::handle_white_promotion_choice(int mouseCell, int promotionCell) {
     std::unordered_map<uint8_t, uint64_t*> promotionSelectionCells;
-    promotionSelectionCells[promotionCell] = &board.whiteQueens;
-    promotionSelectionCells[promotionCell - 8] = &board.whiteRooks;
-    promotionSelectionCells[promotionCell - 16] = &board.whiteKnights;
-    promotionSelectionCells[promotionCell - 24] = &board.whiteBishops;
+    promotionSelectionCells[promotionCell] = &board.white_queens;
+    promotionSelectionCells[promotionCell - 8] = &board.white_rooks;
+    promotionSelectionCells[promotionCell - 16] = &board.white_knights;
+    promotionSelectionCells[promotionCell - 24] = &board.white_bishops;
 
     for (auto option : promotionSelectionCells) {
         if (option.first != mouseCell) continue;
@@ -375,10 +375,10 @@ void Game::handle_white_promotion_choice(int mouseCell, int promotionCell) {
 
 void Game::handle_black_promotion_choice(int mouseCell, int promotionCell) {
     std::unordered_map<uint8_t, uint64_t*> promotionSelectionCells;
-    promotionSelectionCells[promotionCell] = &board.blackQueens;
-    promotionSelectionCells[promotionCell + 8] = &board.blackRooks;
-    promotionSelectionCells[promotionCell + 16] = &board.blackKnights;
-    promotionSelectionCells[promotionCell + 24] = &board.blackBishops;
+    promotionSelectionCells[promotionCell] = &board.black_queens;
+    promotionSelectionCells[promotionCell + 8] = &board.black_rooks;
+    promotionSelectionCells[promotionCell + 16] = &board.black_knights;
+    promotionSelectionCells[promotionCell + 24] = &board.black_bishops;
 
     for (auto option : promotionSelectionCells) {
         if (option.first != mouseCell) continue;

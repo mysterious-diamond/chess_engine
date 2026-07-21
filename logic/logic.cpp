@@ -23,19 +23,19 @@ bool is_black_short_castle_available = true;
 uint64_t* get_piece_type_on_cell(uint8_t cell) {
     if (cell >= 64) return nullptr;
 
-    if (board.whitePawns & (1ull << cell)) return &board.whitePawns;
-    if (board.whiteRooks & (1ull << cell)) return &board.whiteRooks;
-    if (board.whiteKnights & (1ull << cell)) return &board.whiteKnights;
-    if (board.whiteBishops & (1ull << cell)) return &board.whiteBishops;
-    if (board.whiteQueens & (1ull << cell)) return &board.whiteQueens;
-    if (board.whiteKing & (1ull << cell)) return &board.whiteKing;
+    if (board.white_pawns & (1ull << cell)) return &board.white_pawns;
+    if (board.white_rooks & (1ull << cell)) return &board.white_rooks;
+    if (board.white_knights & (1ull << cell)) return &board.white_knights;
+    if (board.white_bishops & (1ull << cell)) return &board.white_bishops;
+    if (board.white_queens & (1ull << cell)) return &board.white_queens;
+    if (board.white_king & (1ull << cell)) return &board.white_king;
 
-    if (board.blackPawns & (1ull << cell)) return &board.blackPawns;
-    if (board.blackRooks & (1ull << cell)) return &board.blackRooks;
-    if (board.blackKnights & (1ull << cell)) return &board.blackKnights;
-    if (board.blackBishops & (1ull << cell)) return &board.blackBishops;
-    if (board.blackQueens & (1ull << cell)) return &board.blackQueens;
-    if (board.blackKing & (1ull << cell)) return &board.blackKing;
+    if (board.black_pawns & (1ull << cell)) return &board.black_pawns;
+    if (board.black_rooks & (1ull << cell)) return &board.black_rooks;
+    if (board.black_knights & (1ull << cell)) return &board.black_knights;
+    if (board.black_bishops & (1ull << cell)) return &board.black_bishops;
+    if (board.black_queens & (1ull << cell)) return &board.black_queens;
+    if (board.black_king & (1ull << cell)) return &board.black_king;
 
     return nullptr;
 }
@@ -45,7 +45,7 @@ void handle_promotion(uint64_t* chosen_promotion_type) {
     if (pawn_promotion_cell == 64) return;
 
     bool is_white = is_piece_on_cell_white(pawn_promotion_cell);
-    uint64_t* piece_type = (is_white ? &board.whitePawns : &board.blackPawns);
+    uint64_t* piece_type = (is_white ? &board.white_pawns : &board.black_pawns);
 
     *piece_type ^= (1ull << pawn_promotion_cell);
     *chosen_promotion_type ^= (1ull << pawn_promotion_cell);
@@ -55,13 +55,13 @@ void handle_promotion(uint64_t* chosen_promotion_type) {
 
 uint8_t get_promotion_pawn_cell() {
     for (int i = 56; i <= 63; i++) {
-        if (board.whitePawns & (1ull << i)) {
+        if (board.white_pawns & (1ull << i)) {
             return i;
         }
     }
 
     for (int i = 0; i <= 7; i++) {
-        if (board.blackPawns & (1ull << i)) {
+        if (board.black_pawns & (1ull << i)) {
             return i;
         }
     }
@@ -73,12 +73,12 @@ bool is_piece_on_cell_white(uint8_t cell) {
     if (!get_piece_type_on_cell(cell)) return false;
     uint64_t piece_type = *get_piece_type_on_cell(cell);
 
-    if (piece_type == board.whitePawns) return true;
-    if (piece_type == board.whiteRooks) return true;
-    if (piece_type == board.whiteKnights) return true;
-    if (piece_type == board.whiteBishops) return true;
-    if (piece_type == board.whiteQueens) return true;
-    if (piece_type == board.whiteKing) return true;
+    if (piece_type == board.white_pawns) return true;
+    if (piece_type == board.white_rooks) return true;
+    if (piece_type == board.white_knights) return true;
+    if (piece_type == board.white_bishops) return true;
+    if (piece_type == board.white_queens) return true;
+    if (piece_type == board.white_king) return true;
 
     return false;
 }
@@ -532,17 +532,17 @@ void get_piece_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
 
     uint64_t* piece_type = get_piece_type_on_cell(cell);
 
-    if (piece_type == &board.whitePawns || piece_type == &board.blackPawns) {
+    if (piece_type == &board.white_pawns || piece_type == &board.black_pawns) {
         get_pawn_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.whiteRooks || piece_type == &board.blackRooks) {
+    } else if (piece_type == &board.white_rooks || piece_type == &board.black_rooks) {
         get_rook_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.whiteKnights || piece_type == &board.blackKnights) {
+    } else if (piece_type == &board.white_knights || piece_type == &board.black_knights) {
         get_knight_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.whiteBishops || piece_type == &board.blackBishops) {
+    } else if (piece_type == &board.white_bishops || piece_type == &board.black_bishops) {
         get_bishop_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.whiteQueens || piece_type == &board.blackQueens) {
+    } else if (piece_type == &board.white_queens || piece_type == &board.black_queens) {
         get_queen_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.whiteKing || piece_type == &board.blackKing) {
+    } else if (piece_type == &board.white_king || piece_type == &board.black_king) {
         get_king_legal_moves(legal_moves, cell);
     }
 
@@ -559,27 +559,27 @@ void handle_move(uint64_t* piece_type, uint16_t move) {
     bool is_castle = move & (1ull << 2);
 
     is_en_passant_available = false;
-    if (*piece_type == board.whitePawns && destination_pos == original_pos + 16)
+    if (*piece_type == board.white_pawns && destination_pos == original_pos + 16)
         is_en_passant_available = true;
-    else if (*piece_type == board.blackPawns && destination_pos == original_pos - 16)
+    else if (*piece_type == board.black_pawns && destination_pos == original_pos - 16)
         is_en_passant_available = true;
 
-    if (*piece_type == board.whiteRooks) {
+    if (*piece_type == board.white_rooks) {
         if (original_pos == 0)
             is_white_long_castle_available = false;
         else if (original_pos == 7)
             is_white_short_castle_available = false;
-    } else if (*piece_type == board.blackRooks) {
+    } else if (*piece_type == board.black_rooks) {
         if (original_pos == 56)
             is_black_long_castle_available = false;
         else if (original_pos == 63)
             is_black_short_castle_available = false;
     }
 
-    if (*piece_type == board.whiteKing) {
+    if (*piece_type == board.white_king) {
         is_white_long_castle_available = false;
         is_white_short_castle_available = false;
-    } else if (*piece_type == board.blackKing) {
+    } else if (*piece_type == board.black_king) {
         is_black_long_castle_available = false;
         is_black_short_castle_available = false;
     }
@@ -686,7 +686,7 @@ bool is_in_check(bool is_checking_white) {
     uint8_t king_cell = 64;
 
     for (int cell = 0; cell < 64; cell++) {
-        if ((is_checking_white ? board.whiteKing : board.blackKing) & (1ull << cell)) {
+        if ((is_checking_white ? board.white_king : board.black_king) & (1ull << cell)) {
             king_cell = cell;
             std::cout << "Found\n";
             break;

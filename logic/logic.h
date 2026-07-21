@@ -4,19 +4,19 @@
 
 // This implementation is using bitboards. More on bitboards : https://en.wikipedia.org/wiki/Bitboard
 struct Board {
-    uint64_t whitePawns{65280ull};
-    uint64_t whiteRooks{129ull};
-    uint64_t whiteKnights{66ull};
-    uint64_t whiteBishops{36ull};
-    uint64_t whiteQueens{8ull};
-    uint64_t whiteKing{16ull};
+    uint64_t white_pawns{65280ull};
+    uint64_t white_rooks{129ull};
+    uint64_t white_knights{66ull};
+    uint64_t white_bishops{36ull};
+    uint64_t white_queens{8ull};
+    uint64_t white_king{16ull};
 
-    uint64_t blackPawns{71776119061217280ull};
-    uint64_t blackRooks{9295429630892703744ull};
-    uint64_t blackKnights{4755801206503243776ull};
-    uint64_t blackBishops{2594073385365405696ull};
-    uint64_t blackQueens{576460752303423488ull};
-    uint64_t blackKing{1152921504606846976ull};
+    uint64_t black_pawns{71776119061217280ull};
+    uint64_t black_rooks{9295429630892703744ull};
+    uint64_t black_knights{4755801206503243776ull};
+    uint64_t black_bishops{2594073385365405696ull};
+    uint64_t black_queens{576460752303423488ull};
+    uint64_t black_king{1152921504606846976ull};
 };
 
 extern Board board;
