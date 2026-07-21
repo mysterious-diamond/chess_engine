@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <unordered_map>
 
 Board board{};
@@ -69,6 +70,7 @@ uint8_t get_promotion_pawn_cell() {
 }
 
 bool is_piece_on_cell_white(uint8_t cell) {
+    if (!get_piece_type_on_cell(cell)) return false;
     uint64_t piece_type = *get_piece_type_on_cell(cell);
 
     if (piece_type == board.whitePawns) return true;
@@ -414,13 +416,13 @@ void get_queen_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
     // So that's what we're doing, just calling both the get_rook_legal_moves and the get_bishop_legal_moves
     // functions, then combining the result.
 
-    uint16_t rook_legal_moves[27];
-    uint16_t bishop_legal_moves[27];
+    uint16_t rook_legal_moves[27] = {};
+    uint16_t bishop_legal_moves[27] = {};
 
     get_rook_legal_moves(&rook_legal_moves, cell);
     get_bishop_legal_moves(&bishop_legal_moves, cell);
 
-    int last = 0;
+    int last = -1;
     for (int i = 0; i < 27; i++) {
         if (rook_legal_moves[i] == 0) break;
 
@@ -543,6 +545,8 @@ void get_piece_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
     } else if (piece_type == &board.whiteKing || piece_type == &board.blackKing) {
         get_king_legal_moves(legal_moves, cell);
     }
+
+    std::cout << "Fetching succesful" << '\n';
 }
 
 void handle_move(uint64_t* piece_type, uint16_t move) {
@@ -634,16 +638,20 @@ void get_strictly_legal_moves(uint64_t* piece_type, uint16_t (*legal_moves)[27])
         bool is_castle = move & (1ull << 2);
         if (is_castle && is_check) continue;
 
+        std::cout << "Check check" << '\n';
         bool does_move_cause_check = try_make_move_and_check_if_causes_check(piece_type, move);
         if (does_move_cause_check) continue;
 
         strictly_legal_moves[amount_of_moves] = move;
         amount_of_moves++;
+        std::cout << "Checked move #" << (int)amount_of_moves << '\n';
     }
 
     for (int i = 0; i < 27; i++) {
         (*legal_moves)[i] = strictly_legal_moves[i];
     }
+
+    std::cout << "Full Fetch" << '\n';
 }
 
 bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move) {
@@ -656,11 +664,18 @@ bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move
     uint8_t attack_pos = (is_en_passant ? last_placed_cell : new_pos);
     uint64_t* attacked_piece_type = get_piece_type_on_cell(attack_pos);
 
+    std::cout << "Finished fetching move headers\n";
+
     make_move(piece_type, move);
+    std::cout << "Made move\n";
     bool is_check = is_in_check(is_checking_white);
+
+    std::cout << "Made move and checked if check\n";
 
     *piece_type ^= (1ull << original_pos);
     *piece_type ^= (1ull << new_pos);
+
+    std::cout << "Finished putting back pieces\n";
 
     if (attacked_piece_type) *attacked_piece_type ^= (1ull << attack_pos);
 
@@ -673,6 +688,7 @@ bool is_in_check(bool is_checking_white) {
     for (int cell = 0; cell < 64; cell++) {
         if ((is_checking_white ? board.whiteKing : board.blackKing) & (1ull << cell)) {
             king_cell = cell;
+            std::cout << "Found\n";
             break;
         }
     }
@@ -683,6 +699,7 @@ bool is_in_check(bool is_checking_white) {
 
         for (uint16_t move : legal_moves) {
             if (move == 0) break;
+            std::cout << "found Move\n";
             uint8_t destination = (move >> 4) & 63ull;
 
             if (destination == king_cell) return true;
