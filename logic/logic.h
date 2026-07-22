@@ -35,18 +35,13 @@ extern bool is_black_long_castle_available;
 extern bool is_black_short_castle_available;
 
 extern "C" {
+bool is_in_check(bool is_checking_white);
 
-uint64_t* get_piece_type_on_cell(uint8_t cell);
+void get_piece_legal_moves(uint16_t legal_moves[27], uint8_t cell);
 
-void handle_promotion(uint64_t *chosen_promotion_type);
-uint8_t get_promotion_pawn_cell();
-
-bool is_piece_on_cell_white(uint8_t cell); 
-bool is_cell_empty(uint8_t cell);
-
-bool is_valid_target(uint8_t cell, bool is_attacker_white); 
-uint16_t generate_move(uint8_t original_pos, uint8_t destination, bool is_en_passant, bool is_castle, bool is_promotion,
-                       bool is_capture); 
+void handle_move(uint64_t *piece_type, uint16_t move);
+void get_strictly_legal_moves(uint16_t legal_moves[27], uint64_t *piece_type);
+bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move);
 
 void get_pawn_legal_moves(uint16_t legal_moves[27], uint8_t cell); 
 void get_rook_legal_moves(uint16_t legal_moves[27], uint8_t cell);
@@ -55,19 +50,20 @@ void get_knight_legal_moves(uint16_t legal_moves[27], uint8_t cell);
 void get_queen_legal_moves(uint16_t legal_moves[27], uint8_t cell);
 void get_king_legal_moves(uint16_t legal_moves[27], uint8_t cell);
 
-void get_piece_legal_moves(uint16_t legal_moves[27], uint8_t cell);
-
-void handle_move(uint64_t *piece_type, uint16_t move);
+void try_insert_pawn_enpassant_move(uint16_t (&legal_moves)[27], uint8_t cell, int moveN);
 void make_move(uint64_t* piece_type, uint16_t move);
-void remove_piece_on_cell(uint8_t cell);
 
-bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move); 
+void remove_piece_on_cell(uint8_t cell); 
+void handle_promotion(uint64_t *chosen_promotion_type);
 
-// Some moves might cause the friendly team to be in check, however of course,
-// this makes the move illegal. This function is to filter out those moves
-// This function also checks castle rights
-void get_strictly_legal_moves(uint16_t legal_moves[27], uint64_t *piece_type);
+bool is_cell_empty(uint8_t cell);
+bool is_valid_target(uint8_t cell, bool is_attacker_white); 
+bool is_piece_on_cell_white(uint8_t cell);
 
-bool is_in_check(bool is_checking_white);
+uint8_t get_promotion_pawn_cell();
 uint16_t get_move_from_destination_in_legal_moves(uint16_t legal_moves[27], uint8_t destination_to_check);
+uint16_t generate_move(uint8_t original_pos, uint8_t destination, bool is_en_passant, bool is_castle, bool is_promotion,
+                       bool is_capture); 
+
+uint64_t* get_piece_type_on_cell(uint8_t cell);
 }

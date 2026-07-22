@@ -19,91 +19,54 @@ bool is_white_short_castle_available = true;
 bool is_black_long_castle_available = true;
 bool is_black_short_castle_available = true;
 
-uint64_t* get_piece_type_on_cell(uint8_t cell) {
-    if (cell >= 64) return nullptr;
+bool is_in_check(bool is_checking_white) {
+    uint8_t king_cell = 64;
 
-    if (board.white_pawns & (1ull << cell)) return &board.white_pawns;
-    if (board.white_rooks & (1ull << cell)) return &board.white_rooks;
-    if (board.white_knights & (1ull << cell)) return &board.white_knights;
-    if (board.white_bishops & (1ull << cell)) return &board.white_bishops;
-    if (board.white_queens & (1ull << cell)) return &board.white_queens;
-    if (board.white_king & (1ull << cell)) return &board.white_king;
-
-    if (board.black_pawns & (1ull << cell)) return &board.black_pawns;
-    if (board.black_rooks & (1ull << cell)) return &board.black_rooks;
-    if (board.black_knights & (1ull << cell)) return &board.black_knights;
-    if (board.black_bishops & (1ull << cell)) return &board.black_bishops;
-    if (board.black_queens & (1ull << cell)) return &board.black_queens;
-    if (board.black_king & (1ull << cell)) return &board.black_king;
-
-    return nullptr;
-}
-
-void handle_promotion(uint64_t* chosen_promotion_type) {
-    uint8_t pawn_promotion_cell = get_promotion_pawn_cell();
-    if (pawn_promotion_cell == 64) return;
-
-    bool is_white = is_piece_on_cell_white(pawn_promotion_cell);
-    uint64_t* piece_type = (is_white ? &board.white_pawns : &board.black_pawns);
-
-    *piece_type ^= (1ull << pawn_promotion_cell);
-    *chosen_promotion_type ^= (1ull << pawn_promotion_cell);
-
-    is_white_turn = !is_white_turn;
-}
-
-uint8_t get_promotion_pawn_cell() {
-    for (int i = 56; i <= 63; i++) {
-        if (board.white_pawns & (1ull << i)) {
-            return i;
+    for (int cell = 0; cell < 64; cell++) {
+        if ((is_checking_white ? board.white_king : board.black_king) & (1ull << cell)) {
+            king_cell = cell;
+            break;
         }
     }
 
-    for (int i = 0; i <= 7; i++) {
-        if (board.black_pawns & (1ull << i)) {
-            return i;
+    for (int cell = 0; cell < 64; cell++) {
+        uint16_t legal_moves[27] = {};
+        get_piece_legal_moves(&legal_moves[0], cell);
+
+        for (uint16_t move : legal_moves) {
+            if (move == 0) break;
+            uint8_t destination = (move >> 4) & 63ull;
+
+            if (destination == king_cell) return true;
         }
     }
-
-    return 64;
-}
-
-bool is_piece_on_cell_white(uint8_t cell) {
-    if (!get_piece_type_on_cell(cell)) return false;
-    uint64_t piece_type = *get_piece_type_on_cell(cell);
-
-    if (piece_type == board.white_pawns) return true;
-    if (piece_type == board.white_rooks) return true;
-    if (piece_type == board.white_knights) return true;
-    if (piece_type == board.white_bishops) return true;
-    if (piece_type == board.white_queens) return true;
-    if (piece_type == board.white_king) return true;
 
     return false;
 }
 
-bool is_cell_empty(uint8_t cell) { return !get_piece_type_on_cell(cell); }
-bool is_valid_target(uint8_t cell, bool is_attacker_white) {
-    if (cell < 0 || cell >= 64) return false;
-    if (!is_cell_empty(cell) && is_piece_on_cell_white(cell) == is_attacker_white) return false;
-    return true;
-}
+void get_piece_legal_moves(uint16_t* array_ptr, uint8_t cell) {
+    uint16_t legal_moves[27] = {};
+    if (cell < 0 || cell > 63) return;
 
-uint16_t generate_move(uint8_t original_pos, uint8_t destination, bool is_en_passant, bool is_castle, bool is_promotion,
-                       bool is_capture) {
-    // Encoding Legal Moves :
-    // First 6 bits : original position
-    // Next 6 bits : destination
-    // Last 4 bits : boolean flags
-    uint16_t result = 0;
-    result ^= (original_pos << 10);
-    result ^= (destination << 4);
-    result ^= (is_en_passant << 3);
-    result ^= (is_castle << 2);
-    result ^= (is_promotion << 1);
-    result ^= is_capture;
+    uint64_t* piece_type = get_piece_type_on_cell(cell);
 
-    return result;
+    if (piece_type == &board.white_pawns || piece_type == &board.black_pawns) {
+        get_pawn_legal_moves(legal_moves, cell);
+    } else if (piece_type == &board.white_rooks || piece_type == &board.black_rooks) {
+        get_rook_legal_moves(legal_moves, cell);
+    } else if (piece_type == &board.white_knights || piece_type == &board.black_knights) {
+        get_knight_legal_moves(legal_moves, cell);
+    } else if (piece_type == &board.white_bishops || piece_type == &board.black_bishops) {
+        get_bishop_legal_moves(legal_moves, cell);
+    } else if (piece_type == &board.white_queens || piece_type == &board.black_queens) {
+        get_queen_legal_moves(legal_moves, cell);
+    } else if (piece_type == &board.white_king || piece_type == &board.black_king) {
+        get_king_legal_moves(legal_moves, cell);
+    }
+
+    for (int i = 0; i < 27; i++) {
+        array_ptr[i] = legal_moves[i];
+    }
 }
 
 void get_pawn_legal_moves(uint16_t* array_ptr, uint8_t cell) {
@@ -112,28 +75,32 @@ void get_pawn_legal_moves(uint16_t* array_ptr, uint8_t cell) {
     bool is_white = is_piece_on_cell_white(cell);
     int direction = (is_white ? 1 : -1);
     int rank = cell / 8;
+    int moveN = 0;
 
     int target_cell = cell + 8 * direction;
     if (is_cell_empty(target_cell) && is_valid_target(target_cell, is_white)) {
-        // Advance 1 square
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
 
-        legal_moves[0] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 0);
+        legal_moves[moveN] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 0);
+        moveN++;
+
         target_cell = cell + 16 * direction;
         bool is_pawn_at_start = (is_white ? rank == 1 : rank == 6);
 
         // if pawn has never moved before, it can move 2 steps forward
         if (is_pawn_at_start && is_cell_empty(target_cell) && is_valid_target(target_cell, is_white)) {
-            legal_moves[1] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[moveN] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            moveN++;
         }
     }
 
-    // Check Left Top Square For Enemy
+    // Left top square checking
     target_cell = cell + 7 * direction;
     bool is_empty = is_cell_empty(target_cell);
     if (is_valid_target(target_cell, is_white) && !is_empty && rank != target_cell / 8) {
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
-        legal_moves[2] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
+        legal_moves[moveN] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
+        moveN++;
     }
 
     // Check Right Top Square For Enemy
@@ -141,35 +108,11 @@ void get_pawn_legal_moves(uint16_t* array_ptr, uint8_t cell) {
     is_empty = is_cell_empty(target_cell);
     if (is_valid_target(target_cell, is_white) && !is_empty && rank != target_cell / 8) {
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
-        legal_moves[3] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
+        legal_moves[moveN] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
+        moveN++;
     }
 
-    // En Passant
-    // If enemy moved a pawn 2 spaces forward to beside a friendly pawn,
-    // the friendly pawn can move to the space the pawn skipped and
-    // capture the pawn.
-    if (is_en_passant_available) {
-        int left = (is_white ? cell - 1 : cell + 1);
-        int right = (is_white ? cell + 1 : cell - 1);
-
-        int leftRank = left / 8;
-        int rightRank = right / 8;
-
-        int resulting_left = (is_white ? cell + 7 : cell - 7);
-        int resulting_right = (is_white ? cell + 9 : cell - 9);
-
-        bool isLeftLastMoved = (left == last_placed_cell);
-        bool isRightLastMoved = (right == last_placed_cell);
-
-        bool isLegalLeft = is_valid_target(left, is_white) && rank == leftRank;
-        bool isLegalRight = is_valid_target(right, is_white) && rank == rightRank;
-
-        if (isLeftLastMoved && isLegalLeft) {
-            legal_moves[4] = generate_move(cell, resulting_left, 1, 0, 0, 0);
-        } else if (isRightLastMoved && isLegalRight) {
-            legal_moves[4] = generate_move(cell, resulting_right, 1, 0, 0, 0);
-        }
-    }
+    if (is_en_passant_available) try_insert_pawn_enpassant_move(legal_moves, cell, moveN);
 
     for (int i = 0; i < 27; i++) {
         array_ptr[i] = legal_moves[i];
@@ -556,31 +499,6 @@ void get_king_legal_moves(uint16_t* array_ptr, uint8_t cell) {
     }
 }
 
-void get_piece_legal_moves(uint16_t* array_ptr, uint8_t cell) {
-    uint16_t legal_moves[27] = {};
-    if (cell < 0 || cell > 63) return;
-
-    uint64_t* piece_type = get_piece_type_on_cell(cell);
-
-    if (piece_type == &board.white_pawns || piece_type == &board.black_pawns) {
-        get_pawn_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.white_rooks || piece_type == &board.black_rooks) {
-        get_rook_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.white_knights || piece_type == &board.black_knights) {
-        get_knight_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.white_bishops || piece_type == &board.black_bishops) {
-        get_bishop_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.white_queens || piece_type == &board.black_queens) {
-        get_queen_legal_moves(legal_moves, cell);
-    } else if (piece_type == &board.white_king || piece_type == &board.black_king) {
-        get_king_legal_moves(legal_moves, cell);
-    }
-
-    for (int i = 0; i < 27; i++) {
-        array_ptr[i] = legal_moves[i];
-    }
-}
-
 void handle_move(uint64_t* piece_type, uint16_t move) {
     make_move(piece_type, move);
 
@@ -619,6 +537,35 @@ void handle_move(uint64_t* piece_type, uint16_t move) {
     uint8_t pawn_promotion_cell = get_promotion_pawn_cell();
     if (pawn_promotion_cell == 64) is_white_turn = !is_white_turn;
 }
+
+void try_insert_pawn_enpassant_move(uint16_t (&legal_moves)[27], uint8_t cell, int moveN) {
+    // If enemy moved a pawn 2 spaces forward to beside a friendly pawn,
+    // the friendly pawn can move to the space the pawn skipped and
+    // capture the pawn.
+    bool is_white = is_piece_on_cell_white(cell);
+    int rank = cell / 8;
+
+    int left = (is_white ? cell - 1 : cell + 1);
+    int right = (is_white ? cell + 1 : cell - 1);
+
+    int leftRank = left / 8;
+    int rightRank = right / 8;
+
+    int resulting_left = (is_white ? cell + 7 : cell - 7);
+    int resulting_right = (is_white ? cell + 9 : cell - 9);
+
+    bool isLeftLastMoved = (left == last_placed_cell);
+    bool isRightLastMoved = (right == last_placed_cell);
+
+    bool isLegalLeft = is_valid_target(left, is_white) && rank == leftRank;
+    bool isLegalRight = is_valid_target(right, is_white) && rank == rightRank;
+
+    if (isLeftLastMoved && isLegalLeft) {
+        legal_moves[moveN] = generate_move(cell, resulting_left, 1, 0, 0, 1);
+    } else if (isRightLastMoved && isLegalRight) {
+        legal_moves[moveN] = generate_move(cell, resulting_right, 1, 0, 0, 1);
+    }
+};
 
 void make_move(uint64_t* piece_type, uint16_t move) {
     uint8_t original_pos = (move >> 10) & 63ull;
@@ -688,6 +635,7 @@ bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move
     uint8_t new_pos = (move >> 4) & 63ull;
 
     bool is_en_passant = (move & (1ull << 3));
+    bool is_castle = (move & (1ull << 2));
     bool is_checking_white = is_piece_on_cell_white(original_pos);
 
     uint8_t attack_pos = (is_en_passant ? last_placed_cell : new_pos);
@@ -699,35 +647,76 @@ bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move
     *piece_type ^= (1ull << original_pos);
     *piece_type ^= (1ull << new_pos);
 
-    if (attacked_piece_type) *attacked_piece_type ^= (1ull << attack_pos);
+    if (is_castle) {
+        if (original_pos == new_pos + 2) {
+            uint64_t* rook_type = get_piece_type_on_cell(new_pos + 1);
+
+            std::cout << rook_type << " " << new_pos << " e\n";
+            *rook_type ^= (1ull << (new_pos + 1));
+            *rook_type ^= (1ull << (new_pos - 2));
+        } else if (original_pos == new_pos - 2) {
+            uint64_t* rook_type = get_piece_type_on_cell(new_pos - 1);
+
+            std::cout << rook_type << " " << (int)new_pos << " a\n";
+            *rook_type ^= (1ull << (new_pos - 1));
+            *rook_type ^= (1ull << (new_pos + 1));
+        }
+    } else if (attacked_piece_type) {
+        *attacked_piece_type ^= (1ull << attack_pos);
+    }
+
     return is_check;
 }
 
-bool is_in_check(bool is_checking_white) {
-    uint8_t king_cell = 64;
+void handle_promotion(uint64_t* chosen_promotion_type) {
+    uint8_t pawn_promotion_cell = get_promotion_pawn_cell();
+    if (pawn_promotion_cell == 64) return;
 
-    for (int cell = 0; cell < 64; cell++) {
-        if ((is_checking_white ? board.white_king : board.black_king) & (1ull << cell)) {
-            king_cell = cell;
-            std::cout << "Found\n";
-            break;
-        }
-    }
+    bool is_white = is_piece_on_cell_white(pawn_promotion_cell);
+    uint64_t* piece_type = (is_white ? &board.white_pawns : &board.black_pawns);
 
-    for (int cell = 0; cell < 64; cell++) {
-        uint16_t legal_moves[27] = {};
-        get_piece_legal_moves(&legal_moves[0], cell);
+    *piece_type ^= (1ull << pawn_promotion_cell);
+    *chosen_promotion_type ^= (1ull << pawn_promotion_cell);
 
-        for (uint16_t move : legal_moves) {
-            if (move == 0) break;
-            std::cout << "found Move\n";
-            uint8_t destination = (move >> 4) & 63ull;
+    is_white_turn = !is_white_turn;
+}
 
-            if (destination == king_cell) return true;
-        }
-    }
+bool is_valid_target(uint8_t cell, bool is_attacker_white) {
+    if (cell < 0 || cell >= 64) return false;
+    if (!is_cell_empty(cell) && is_piece_on_cell_white(cell) == is_attacker_white) return false;
+    return true;
+}
+
+bool is_cell_empty(uint8_t cell) { return !get_piece_type_on_cell(cell); }
+
+bool is_piece_on_cell_white(uint8_t cell) {
+    if (!get_piece_type_on_cell(cell)) return false;
+    uint64_t piece_type = *get_piece_type_on_cell(cell);
+
+    if (piece_type == board.white_pawns) return true;
+    if (piece_type == board.white_rooks) return true;
+    if (piece_type == board.white_knights) return true;
+    if (piece_type == board.white_bishops) return true;
+    if (piece_type == board.white_queens) return true;
+    if (piece_type == board.white_king) return true;
 
     return false;
+}
+
+uint8_t get_promotion_pawn_cell() {
+    for (int i = 56; i <= 63; i++) {
+        if (board.white_pawns & (1ull << i)) {
+            return i;
+        }
+    }
+
+    for (int i = 0; i <= 7; i++) {
+        if (board.black_pawns & (1ull << i)) {
+            return i;
+        }
+    }
+
+    return 64;
 }
 
 uint16_t get_move_from_destination_in_legal_moves(uint16_t* array_ptr, uint8_t destination_to_check) {
@@ -740,4 +729,41 @@ uint16_t get_move_from_destination_in_legal_moves(uint16_t* array_ptr, uint8_t d
     }
 
     return 0;
+}
+
+uint16_t generate_move(uint8_t original_pos, uint8_t destination, bool is_en_passant, bool is_castle, bool is_promotion,
+                       bool is_capture) {
+    // Encoding Legal Moves :
+    // First 6 bits : original position
+    // Next 6 bits : destination
+    // Last 4 bits : boolean flags
+    uint16_t result = 0;
+    result ^= (original_pos << 10);
+    result ^= (destination << 4);
+    result ^= (is_en_passant << 3);
+    result ^= (is_castle << 2);
+    result ^= (is_promotion << 1);
+    result ^= is_capture;
+
+    return result;
+}
+
+uint64_t* get_piece_type_on_cell(uint8_t cell) {
+    if (cell >= 64) return nullptr;
+
+    if (board.white_pawns & (1ull << cell)) return &board.white_pawns;
+    if (board.white_rooks & (1ull << cell)) return &board.white_rooks;
+    if (board.white_knights & (1ull << cell)) return &board.white_knights;
+    if (board.white_bishops & (1ull << cell)) return &board.white_bishops;
+    if (board.white_queens & (1ull << cell)) return &board.white_queens;
+    if (board.white_king & (1ull << cell)) return &board.white_king;
+
+    if (board.black_pawns & (1ull << cell)) return &board.black_pawns;
+    if (board.black_rooks & (1ull << cell)) return &board.black_rooks;
+    if (board.black_knights & (1ull << cell)) return &board.black_knights;
+    if (board.black_bishops & (1ull << cell)) return &board.black_bishops;
+    if (board.black_queens & (1ull << cell)) return &board.black_queens;
+    if (board.black_king & (1ull << cell)) return &board.black_king;
+
+    return nullptr;
 }
