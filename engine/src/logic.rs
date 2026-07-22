@@ -15,4 +15,7 @@ pub struct Board {
     black_king: u64,
 }
 
-unsafe extern "C" {}
+unsafe extern "C" {
+    pub fn get_piece_type_on_cell(cell: u8) -> *mut u64;
+    pub fn get_piece_legal_moves(legal_moves: *mut vec![u16; 27]);
+}

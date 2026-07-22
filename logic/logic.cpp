@@ -1,7 +1,6 @@
 #include "logic.h"
 
 #include <cstdint>
-#include <cstring>
 #include <iostream>
 #include <unordered_map>
 
@@ -107,10 +106,9 @@ uint16_t generate_move(uint8_t original_pos, uint8_t destination, bool is_en_pas
     return result;
 }
 
-void get_pawn_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
+void get_pawn_legal_moves(uint16_t* array_ptr, uint8_t cell) {
     // Make sure array is set to 0 so it doesnt return garbage values
-    std::memset(legal_moves, 0, sizeof(*legal_moves));
-
+    uint16_t legal_moves[27] = {};
     bool is_white = is_piece_on_cell_white(cell);
     int direction = (is_white ? 1 : -1);
     int rank = cell / 8;
@@ -120,13 +118,13 @@ void get_pawn_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         // Advance 1 square
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
 
-        (*legal_moves)[0] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 0);
+        legal_moves[0] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 0);
         target_cell = cell + 16 * direction;
         bool is_pawn_at_start = (is_white ? rank == 1 : rank == 6);
 
         // if pawn has never moved before, it can move 2 steps forward
         if (is_pawn_at_start && is_cell_empty(target_cell) && is_valid_target(target_cell, is_white)) {
-            (*legal_moves)[1] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[1] = generate_move(cell, target_cell, 0, 0, 0, 0);
         }
     }
 
@@ -135,7 +133,7 @@ void get_pawn_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
     bool is_empty = is_cell_empty(target_cell);
     if (is_valid_target(target_cell, is_white) && !is_empty && rank != target_cell / 8) {
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
-        (*legal_moves)[2] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
+        legal_moves[2] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
     }
 
     // Check Right Top Square For Enemy
@@ -143,7 +141,7 @@ void get_pawn_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
     is_empty = is_cell_empty(target_cell);
     if (is_valid_target(target_cell, is_white) && !is_empty && rank != target_cell / 8) {
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
-        (*legal_moves)[3] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
+        legal_moves[3] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
     }
 
     // En Passant
@@ -167,14 +165,19 @@ void get_pawn_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool isLegalRight = is_valid_target(right, is_white) && rank == rightRank;
 
         if (isLeftLastMoved && isLegalLeft) {
-            (*legal_moves)[4] = generate_move(cell, resulting_left, 1, 0, 0, 0);
+            legal_moves[4] = generate_move(cell, resulting_left, 1, 0, 0, 0);
         } else if (isRightLastMoved && isLegalRight) {
-            (*legal_moves)[4] = generate_move(cell, resulting_right, 1, 0, 0, 0);
+            legal_moves[4] = generate_move(cell, resulting_right, 1, 0, 0, 0);
         }
+    }
+
+    for (int i = 0; i < 27; i++) {
+        array_ptr[i] = legal_moves[i];
     }
 }
 
-void get_rook_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
+void get_rook_legal_moves(uint16_t* array_ptr, uint8_t cell) {
+    uint16_t legal_moves[27] = {};
     bool is_attacker_white = is_piece_on_cell_white(cell);
 
     int file = cell % 8;
@@ -192,10 +195,10 @@ void get_rook_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool is_legal = is_valid_target(target_cell, is_attacker_white);
 
         if (is_empty && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
             amount_of_moves++;
             break;
         } else {
@@ -212,10 +215,10 @@ void get_rook_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool is_legal = is_valid_target(target_cell, is_attacker_white);
 
         if (is_empty && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
             amount_of_moves++;
             break;
         } else {
@@ -232,10 +235,10 @@ void get_rook_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool is_legal = is_valid_target(target_cell, is_attacker_white);
 
         if (is_empty && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
             amount_of_moves++;
             break;
         } else {
@@ -252,19 +255,25 @@ void get_rook_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool is_legal = is_valid_target(target_cell, is_attacker_white);
 
         if (is_empty && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
             amount_of_moves++;
             break;
         } else {
             break;
         }
     }
+
+    for (int i = 0; i < 27; i++) {
+        array_ptr[i] = legal_moves[i];
+    }
 }
 
-void get_bishop_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
+void get_bishop_legal_moves(uint16_t* array_ptr, uint8_t cell) {
+    uint16_t legal_moves[27] = {};
+
     bool is_attacker_white = is_piece_on_cell_white(cell);
     int file = cell % 8;
     int rank = cell / 8;
@@ -286,10 +295,10 @@ void get_bishop_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool is_legal = is_valid_target(target_cell, is_attacker_white);
 
         if (is_empty && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
             amount_of_moves++;
             break;
         } else {
@@ -309,10 +318,10 @@ void get_bishop_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool is_legal = is_valid_target(target_cell, is_attacker_white);
 
         if (is_empty && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
             amount_of_moves++;
             break;
         } else {
@@ -332,10 +341,10 @@ void get_bishop_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool is_legal = is_valid_target(target_cell, is_attacker_white);
 
         if (is_empty && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
             amount_of_moves++;
             break;
         } else {
@@ -355,19 +364,25 @@ void get_bishop_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         bool is_legal = is_valid_target(target_cell, is_attacker_white);
 
         if (is_empty && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 0);
             amount_of_moves++;
         } else if (is_white != is_attacker_white && is_legal) {
-            (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
+            legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, 1);
             amount_of_moves++;
             break;
         } else {
             break;
         }
     }
+
+    for (int i = 0; i < 27; i++) {
+        array_ptr[i] = legal_moves[i];
+    }
 }
 
-void get_knight_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
+void get_knight_legal_moves(uint16_t* array_ptr, uint8_t cell) {
+    uint16_t legal_moves[27] = {};
+
     bool is_white = is_piece_on_cell_white(cell);
     uint8_t attacker_file = cell % 8;
     uint8_t attacker_rank = cell / 8;
@@ -406,41 +421,52 @@ void get_knight_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         if (file == attacker_file || rank == attacker_rank) continue;
 
         bool is_capturing = !is_cell_empty(target_cell);
-        (*legal_moves)[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, is_capturing);
+        legal_moves[amount_of_moves] = generate_move(cell, target_cell, 0, 0, 0, is_capturing);
         amount_of_moves++;
+    }
+
+    for (int i = 0; i < 27; i++) {
+        array_ptr[i] = legal_moves[i];
     }
 }
 
-void get_queen_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
+void get_queen_legal_moves(uint16_t* array_ptr, uint8_t cell) {
     // A very clever trick : A king's moves are just the combination of a rook's and a bishop's.
     // So that's what we're doing, just calling both the get_rook_legal_moves and the get_bishop_legal_moves
     // functions, then combining the result.
 
+    uint16_t legal_moves[27] = {};
     uint16_t rook_legal_moves[27] = {};
     uint16_t bishop_legal_moves[27] = {};
 
-    get_rook_legal_moves(&rook_legal_moves, cell);
-    get_bishop_legal_moves(&bishop_legal_moves, cell);
+    get_rook_legal_moves(&rook_legal_moves[0], cell);
+    get_bishop_legal_moves(&bishop_legal_moves[0], cell);
 
     int last = -1;
     for (int i = 0; i < 27; i++) {
         if (rook_legal_moves[i] == 0) break;
 
-        (*legal_moves)[i] = rook_legal_moves[i];
+        legal_moves[i] = rook_legal_moves[i];
         last = i;
     }
 
     for (int i = last + 1; i < 27; i++) {
         if (bishop_legal_moves[i - last - 1] == 0) break;
 
-        (*legal_moves)[i] = bishop_legal_moves[i - last - 1];
+        legal_moves[i] = bishop_legal_moves[i - last - 1];
+    }
+
+    for (int i = 0; i < 27; i++) {
+        array_ptr[i] = legal_moves[i];
     }
 }
 
-void get_king_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
+void get_king_legal_moves(uint16_t* array_ptr, uint8_t cell) {
     // We will make an offset array, then loop through all those offsets
     // to get the king's neighbors since a king's legal moves are just 1 cell in all the
     // directions around it.
+    uint16_t legal_moves[27] = {};
+
     int neighbors[8] = {7, 8, 9, -1, 1, -9, -8, -7};
     bool is_attacker_white = is_piece_on_cell_white(cell);
 
@@ -462,7 +488,7 @@ void get_king_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
 
         if (is_valid_target(neighbor, is_attacker_white) && !is_file_cut && !is_rank_cut) {
             bool is_capture = !is_cell_empty(neighbor);
-            (*legal_moves)[amount_of_moves] = generate_move(cell, neighbor, 0, 0, 0, is_capture);
+            legal_moves[amount_of_moves] = generate_move(cell, neighbor, 0, 0, 0, is_capture);
             amount_of_moves++;
         }
     }
@@ -477,7 +503,7 @@ void get_king_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
             }
 
             if (!blockedPath) {
-                (*legal_moves)[amount_of_moves] = generate_move(cell, cell - 2, 0, 1, 0, 0);
+                legal_moves[amount_of_moves] = generate_move(cell, cell - 2, 0, 1, 0, 0);
                 amount_of_moves++;
             }
         }
@@ -491,7 +517,7 @@ void get_king_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
             }
 
             if (!blockedPath) {
-                (*legal_moves)[amount_of_moves] = generate_move(cell, cell + 2, 0, 1, 0, 0);
+                legal_moves[amount_of_moves] = generate_move(cell, cell + 2, 0, 1, 0, 0);
                 amount_of_moves++;
             }
         }
@@ -505,7 +531,7 @@ void get_king_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
             }
 
             if (!blockedPath) {
-                (*legal_moves)[amount_of_moves] = generate_move(cell, cell - 2, 0, 1, 0, 0);
+                legal_moves[amount_of_moves] = generate_move(cell, cell - 2, 0, 1, 0, 0);
                 amount_of_moves++;
             }
         }
@@ -519,15 +545,19 @@ void get_king_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
             }
 
             if (!blockedPath) {
-                (*legal_moves)[amount_of_moves] = generate_move(cell, cell + 2, 0, 1, 0, 0);
+                legal_moves[amount_of_moves] = generate_move(cell, cell + 2, 0, 1, 0, 0);
                 amount_of_moves++;
             }
         }
     }
+
+    for (int i = 0; i < 27; i++) {
+        array_ptr[i] = legal_moves[i];
+    }
 }
 
-void get_piece_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
-    std::memset(legal_moves, 0, sizeof(*legal_moves));
+void get_piece_legal_moves(uint16_t* array_ptr, uint8_t cell) {
+    uint16_t legal_moves[27] = {};
     if (cell < 0 || cell > 63) return;
 
     uint64_t* piece_type = get_piece_type_on_cell(cell);
@@ -546,7 +576,9 @@ void get_piece_legal_moves(uint16_t (*legal_moves)[27], uint8_t cell) {
         get_king_legal_moves(legal_moves, cell);
     }
 
-    std::cout << "Fetching succesful" << '\n';
+    for (int i = 0; i < 27; i++) {
+        array_ptr[i] = legal_moves[i];
+    }
 }
 
 void handle_move(uint64_t* piece_type, uint16_t move) {
@@ -625,11 +657,12 @@ void remove_piece_on_cell(uint8_t cell) {
     *piece_type ^= (1ull << cell);
 }
 
-void get_strictly_legal_moves(uint64_t* piece_type, uint16_t (*legal_moves)[27]) {
+void get_strictly_legal_moves(uint16_t* array_ptr, uint64_t* piece_type) {
     uint16_t strictly_legal_moves[27] = {};
 
     uint8_t amount_of_moves = 0;
-    for (uint16_t move : *legal_moves) {
+    for (int i = 0; i < 27; i++) {
+        uint16_t move = array_ptr[i];
         if (move == 0) break;
 
         bool is_white = is_piece_on_cell_white((move >> 10) & 63ull);
@@ -638,20 +671,16 @@ void get_strictly_legal_moves(uint64_t* piece_type, uint16_t (*legal_moves)[27])
         bool is_castle = move & (1ull << 2);
         if (is_castle && is_check) continue;
 
-        std::cout << "Check check" << '\n';
         bool does_move_cause_check = try_make_move_and_check_if_causes_check(piece_type, move);
         if (does_move_cause_check) continue;
 
         strictly_legal_moves[amount_of_moves] = move;
         amount_of_moves++;
-        std::cout << "Checked move #" << (int)amount_of_moves << '\n';
     }
 
     for (int i = 0; i < 27; i++) {
-        (*legal_moves)[i] = strictly_legal_moves[i];
+        array_ptr[i] = strictly_legal_moves[i];
     }
-
-    std::cout << "Full Fetch" << '\n';
 }
 
 bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move) {
@@ -664,21 +693,13 @@ bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move
     uint8_t attack_pos = (is_en_passant ? last_placed_cell : new_pos);
     uint64_t* attacked_piece_type = get_piece_type_on_cell(attack_pos);
 
-    std::cout << "Finished fetching move headers\n";
-
     make_move(piece_type, move);
-    std::cout << "Made move\n";
     bool is_check = is_in_check(is_checking_white);
-
-    std::cout << "Made move and checked if check\n";
 
     *piece_type ^= (1ull << original_pos);
     *piece_type ^= (1ull << new_pos);
 
-    std::cout << "Finished putting back pieces\n";
-
     if (attacked_piece_type) *attacked_piece_type ^= (1ull << attack_pos);
-
     return is_check;
 }
 
@@ -694,8 +715,8 @@ bool is_in_check(bool is_checking_white) {
     }
 
     for (int cell = 0; cell < 64; cell++) {
-        uint16_t legal_moves[27];
-        get_piece_legal_moves(&legal_moves, cell);
+        uint16_t legal_moves[27] = {};
+        get_piece_legal_moves(&legal_moves[0], cell);
 
         for (uint16_t move : legal_moves) {
             if (move == 0) break;
@@ -709,8 +730,9 @@ bool is_in_check(bool is_checking_white) {
     return false;
 }
 
-uint16_t get_move_from_destination_in_legal_moves(uint16_t (*legal_moves)[27], uint8_t destination_to_check) {
-    for (uint16_t move : *legal_moves) {
+uint16_t get_move_from_destination_in_legal_moves(uint16_t* array_ptr, uint8_t destination_to_check) {
+    for (int i = 0; i < 27; i++) {
+        uint16_t move = array_ptr[i];
         if (move == 0) break;
 
         uint8_t destination = (move >> 4) & 63ull;

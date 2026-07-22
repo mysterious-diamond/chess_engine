@@ -254,7 +254,7 @@ void Game::handle_white_placement(uint8_t clickedCell) {
     uint16_t legal_moves[27];
     std::memcpy(legal_moves, last_checked_legal_moves, sizeof(legal_moves));
 
-    uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves, clickedCell);
+    uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
     if (move) {
         uint64_t* piece_type = get_piece_type_on_cell(selectedCell);
         handle_move(piece_type, move);
@@ -272,7 +272,7 @@ void Game::handle_black_placement(uint8_t clickedCell) {
     uint16_t legal_moves[27];
     std::memcpy(legal_moves, last_checked_legal_moves, sizeof(legal_moves));
 
-    uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves, clickedCell);
+    uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
     if (move) {
         uint64_t* piece_type = get_piece_type_on_cell(selectedCell);
         handle_move(piece_type, move);
@@ -294,8 +294,8 @@ void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
 
     std::cout << "Piece Type : " << &type << '\n';
 
-    get_piece_legal_moves(&last_checked_legal_moves, clickedCell);
-    get_strictly_legal_moves(type, &last_checked_legal_moves);
+    get_piece_legal_moves(&last_checked_legal_moves[0], clickedCell);
+    get_strictly_legal_moves(&last_checked_legal_moves[0], type);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -310,8 +310,8 @@ void Game::handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
     if (is_piece_on_cell_white(clickedCell) && !is_cell_empty(clickedCell)) return;
     uint64_t* type = get_piece_type_on_cell(clickedCell);
 
-    get_piece_legal_moves(&last_checked_legal_moves, clickedCell);
-    get_strictly_legal_moves(type, &last_checked_legal_moves);
+    get_piece_legal_moves(&last_checked_legal_moves[0], clickedCell);
+    get_strictly_legal_moves(&last_checked_legal_moves[0], type);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
