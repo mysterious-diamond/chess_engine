@@ -17,5 +17,5 @@ pub struct Board {
 
 unsafe extern "C" {
     pub fn get_piece_type_on_cell(cell: u8) -> *mut u64;
-    pub fn get_piece_legal_moves(legal_moves: *mut vec![u16; 27]);
+    pub fn get_piece_legal_moves(array_ptr_to_insert: *const u16, cell: u8);
 }
