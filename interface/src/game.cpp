@@ -7,6 +7,8 @@
 #include "../../logic/logic.h"
 #include "raylib.h"
 
+bool Game::is_selecting_promotion = false;
+
 Game::Game() {
     wp = LoadTexture(R"(../images/wp.png)");
     wr = LoadTexture(R"(../images/wr.png)");

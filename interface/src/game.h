@@ -21,7 +21,7 @@ class Game {
    private:
     // VARIABLE DECLARATIONS
     // ---------- Game State Variables ------------
-    bool is_selecting_promotion = false;
+    static bool is_selecting_promotion;
     bool is_placement_mode = false;
 
     uint8_t selectedCell = 64;
