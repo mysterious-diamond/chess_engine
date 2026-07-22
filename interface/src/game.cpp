@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <unordered_map>
 
 #include "../../logic/logic.h"
@@ -76,8 +75,6 @@ void Game::handle_input() {
         uint8_t clickedRank = 7 - ((int)mousePos.y / CELL_SIZE);
 
         uint8_t clickedCell = clickedFile + clickedRank * 8;
-        std::cout << "Cell : " << (int)clickedCell << '\n';
-
         if (!is_white_turn) clickedCell = clickedFile + (8 - clickedRank - 1) * 8;
 
         Texture2D cell_texture = get_piece_texture_on_cell(clickedCell);
@@ -291,8 +288,6 @@ void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
 
     if (!is_piece_on_cell_white(clickedCell)) return;
     uint64_t* type = get_piece_type_on_cell(clickedCell);
-
-    std::cout << "Piece Type : " << &type << '\n';
 
     get_piece_legal_moves(&last_checked_legal_moves[0], clickedCell);
     get_strictly_legal_moves(&last_checked_legal_moves[0], type);

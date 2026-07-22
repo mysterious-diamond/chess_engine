@@ -1,7 +1,6 @@
 #include "logic.h"
 
 #include <cstdint>
-#include <iostream>
 #include <unordered_map>
 
 Board board{};
@@ -651,13 +650,11 @@ bool try_make_move_and_check_if_causes_check(uint64_t* piece_type, uint16_t move
         if (original_pos == new_pos + 2) {
             uint64_t* rook_type = get_piece_type_on_cell(new_pos + 1);
 
-            std::cout << rook_type << " " << new_pos << " e\n";
             *rook_type ^= (1ull << (new_pos + 1));
             *rook_type ^= (1ull << (new_pos - 2));
         } else if (original_pos == new_pos - 2) {
             uint64_t* rook_type = get_piece_type_on_cell(new_pos - 1);
 
-            std::cout << rook_type << " " << (int)new_pos << " a\n";
             *rook_type ^= (1ull << (new_pos - 1));
             *rook_type ^= (1ull << (new_pos + 1));
         }
