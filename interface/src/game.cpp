@@ -26,6 +26,7 @@ Game::Game() {
 
     selectedCell = 64;
     std::memset(last_checked_legal_moves, 0, sizeof(*last_checked_legal_moves));
+    Board board{};
 }
 
 void Game::step_game() {
@@ -54,7 +55,7 @@ void Game::handle_promotion_input() {
         }
         int mouseCell = mouseFile + mouseRank * 8;
 
-        int promotionCell = get_promotion_pawn_cell();
+        int promotionCell = get_promotion_pawn_cell(board);
         if (promotionCell == 64) return;
 
         if (is_white_turn) {
@@ -86,7 +87,7 @@ void Game::handle_input() {
             return;
         }
 
-        if (is_cell_empty(clickedCell)) {
+        if (is_cell_empty(board, clickedCell)) {
             std::memset(last_checked_legal_moves, 0, sizeof(last_checked_legal_moves));
             return;
         }
@@ -162,7 +163,7 @@ void Game::draw_legal_moves() {
 }
 
 void Game::render_promotion_board() {
-    int promotionCell = get_promotion_pawn_cell();
+    int promotionCell = get_promotion_pawn_cell(board);
     if (promotionCell == 64) return;
     if (!is_white_turn) {
         // if is black turn, reverse the cell position so the menu appears upright.
@@ -255,10 +256,10 @@ void Game::handle_white_placement(uint8_t clickedCell) {
 
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
     if (move) {
-        uint64_t* piece_type = get_piece_type_on_cell(selectedCell);
-        handle_move(piece_type, move);
+        uint64_t* piece_type = get_piece_type_on_cell(board, selectedCell);
+        handle_move(board, piece_type, move);
 
-        if (get_promotion_pawn_cell() != 64) is_selecting_promotion = true;
+        if (get_promotion_pawn_cell(board) != 64) is_selecting_promotion = true;
     }
 
     reset_placement_variables();
@@ -273,10 +274,10 @@ void Game::handle_black_placement(uint8_t clickedCell) {
 
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
     if (move) {
-        uint64_t* piece_type = get_piece_type_on_cell(selectedCell);
-        handle_move(piece_type, move);
+        uint64_t* piece_type = get_piece_type_on_cell(board, selectedCell);
+        handle_move(board, piece_type, move);
 
-        if (get_promotion_pawn_cell() != 64) is_selecting_promotion = true;
+        if (get_promotion_pawn_cell(board) != 64) is_selecting_promotion = true;
     }
 
     reset_placement_variables();
@@ -288,11 +289,11 @@ void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
         return;
     }
 
-    if (!is_piece_on_cell_white(clickedCell)) return;
-    uint64_t* type = get_piece_type_on_cell(clickedCell);
+    if (!is_piece_on_cell_white(board, clickedCell)) return;
+    uint64_t* type = get_piece_type_on_cell(board, clickedCell);
 
-    get_piece_legal_moves(&last_checked_legal_moves[0], clickedCell);
-    get_strictly_legal_moves(&last_checked_legal_moves[0], type);
+    get_piece_legal_moves(board, &last_checked_legal_moves[0], clickedCell);
+    get_strictly_legal_moves(board, &last_checked_legal_moves[0], type);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -304,11 +305,11 @@ void Game::handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
         return;
     }
 
-    if (is_piece_on_cell_white(clickedCell) && !is_cell_empty(clickedCell)) return;
-    uint64_t* type = get_piece_type_on_cell(clickedCell);
+    if (is_piece_on_cell_white(board, clickedCell) && !is_cell_empty(board, clickedCell)) return;
+    uint64_t* type = get_piece_type_on_cell(board, clickedCell);
 
-    get_piece_legal_moves(&last_checked_legal_moves[0], clickedCell);
-    get_strictly_legal_moves(&last_checked_legal_moves[0], type);
+    get_piece_legal_moves(board, &last_checked_legal_moves[0], clickedCell);
+    get_strictly_legal_moves(board, &last_checked_legal_moves[0], type);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -365,7 +366,7 @@ void Game::handle_white_promotion_choice(int mouseCell, int promotionCell) {
     for (auto option : promotionSelectionCells) {
         if (option.first != mouseCell) continue;
 
-        handle_promotion(option.second);
+        handle_promotion(board, option.second);
         is_selecting_promotion = false;
     }
 }
@@ -380,7 +381,7 @@ void Game::handle_black_promotion_choice(int mouseCell, int promotionCell) {
     for (auto option : promotionSelectionCells) {
         if (option.first != mouseCell) continue;
 
-        handle_promotion(option.second);
+        handle_promotion(board, option.second);
         is_selecting_promotion = false;
     }
 }

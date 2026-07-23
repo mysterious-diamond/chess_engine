@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "raylib.h"
+#include "../../logic/logic.h"
 
 // define macros
 #define SCREEN_HEIGHT 800
@@ -14,7 +15,9 @@
 
 class Game {
    public:
+    Board board;
     Game();
+
     void step_game();
     double evaluate_game();
 
