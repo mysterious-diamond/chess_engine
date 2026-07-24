@@ -16,12 +16,10 @@ pub struct Board {
 }
 
 unsafe extern "C" {
-    pub fn get_board(board_to_return: Board);
+    pub fn handle_move(board: *mut Board, piece_type: *mut u64, move_data: u16);
+    pub fn make_move(board: *mut Board, piece_type: *mut u64, move_data: u16);
+    pub fn get_piece_type_on_cell(board: *mut Board, cell: u8) -> *mut u64;
 
-    pub fn handle_move(piece_type: *const u64, move_data: u16);
-    pub fn make_move(piece_type: *mut u64, move_data: u16);
-    pub fn get_piece_type_on_cell(cell: u8) -> *mut u64;
-
-    pub fn get_piece_legal_moves(array_ptr_to_insert: *const u16, cell: u8);
-    pub fn get_strictly_legal_moves(array_ptr: *const u16, piece_type: *mut u64);
+    pub fn get_piece_legal_moves(board: Board, array_ptr: *mut u16, cell: u8);
+    pub fn get_strictly_legal_moves(board: *mut Board, array_ptr: *mut u16, piece_type: *mut u64);
 }

@@ -16,11 +16,11 @@ target_sources(chess PRIVATE
 )
 
 target_include_directories(chess PRIVATE
-    C:/raylib/raylib/src
+    raylib/include
 )
 
 target_link_libraries(chess PRIVATE
-    C:/raylib/raylib/src/libraylib.a
+    ${CMAKE_CURRENT_SOURCE_DIR}/raylib/include/libraylib.a
     opengl32
     gdi32
     winmm

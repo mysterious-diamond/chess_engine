@@ -55,8 +55,6 @@ void make_move(Board &board, uint64_t* piece_type, uint16_t move);
 void remove_piece_on_cell(Board &board, uint8_t cell); 
 void handle_promotion(Board &board, uint64_t *chosen_promotion_type);
 
-void get_board(Board &board_to_return);
-
 bool is_cell_empty(Board board, uint8_t cell);
 bool is_valid_target(Board board, uint8_t cell, bool is_attacker_white); 
 bool is_piece_on_cell_white(Board board, uint8_t cell);
