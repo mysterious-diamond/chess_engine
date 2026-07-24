@@ -51,9 +51,11 @@ void get_king_legal_moves(Board board, uint16_t *array_ptr, uint8_t cell);
 
 void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], uint8_t cell, int moveN);
 void make_move(Board &board, uint64_t* piece_type, uint16_t move);
+double evaluate_board(Board board);
 
 void remove_piece_on_cell(Board &board, uint8_t cell); 
 void handle_promotion(Board &board, uint64_t *chosen_promotion_type);
+double get_material_score_of_piece(Board board, uint8_t cell);
 
 bool is_cell_empty(Board board, uint8_t cell);
 bool is_valid_target(Board board, uint8_t cell, bool is_attacker_white); 
@@ -65,4 +67,7 @@ uint16_t generate_move(uint8_t original_pos, uint8_t destination, bool is_en_pas
                        bool is_capture); 
 
 uint64_t* get_piece_type_on_cell(Board& board, uint8_t cell);
+
+double get_PST_score_of_piece(Board board, uint8_t cell);
+int get_game_phase(Board board);
 }
