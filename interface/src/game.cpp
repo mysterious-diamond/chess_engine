@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <iostream>
 #include <unordered_map>
 
 #include "../../logic/logic.h"
@@ -84,6 +85,8 @@ void Game::handle_input() {
 
         if (is_placement_mode) {
             handle_turn(clickedCell, cell_texture);
+            std::cout << evaluate_board(board, is_white_turn) << '\n';
+
             return;
         }
 
@@ -385,5 +388,3 @@ void Game::handle_black_promotion_choice(int mouseCell, int promotionCell) {
         is_selecting_promotion = false;
     }
 }
-
-double Game::evaluate_game() { return 0.0; }

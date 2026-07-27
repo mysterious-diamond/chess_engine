@@ -42,7 +42,7 @@ bool is_in_check(Board board, bool is_checking_white) {
     return false;
 }
 
-void get_piece_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
+void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint8_t cell) {
     uint16_t legal_moves[27] = {};
     if (cell < 0 || cell > 63) return;
 
@@ -498,7 +498,7 @@ void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
 }
 
 void handle_move(Board& board, uint64_t* piece_type, uint16_t move) {
-    make_move(board, piece_type, move);
+    make_move(board, move);
 
     uint8_t original_pos = (move >> 10) & 63ull;
     uint8_t destination_pos = (move >> 4) & 63ull;
@@ -565,7 +565,7 @@ void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], ui
     }
 };
 
-void make_move(Board& board, uint64_t* piece_type, uint16_t move) {
+void make_move(Board& board, uint16_t move) {
     uint8_t original_pos = (move >> 10) & 63ull;
     uint8_t new_pos = (move >> 4) & 63ull;
 
@@ -573,6 +573,8 @@ void make_move(Board& board, uint64_t* piece_type, uint16_t move) {
     bool is_castle = (move & (1ull << 2));
     bool is_promotion = (move & (1ull << 1));
     bool is_capture = (move & 1);
+
+    uint64_t* piece_type = get_piece_type_on_cell(board, original_pos);
 
     if (is_capture) {
         uint8_t attack_pos = (is_en_passant ? last_placed_cell : new_pos);
@@ -595,9 +597,7 @@ void make_move(Board& board, uint64_t* piece_type, uint16_t move) {
     *piece_type ^= (1ull << new_pos);
 }
 
-// This implementationof the evaluation function uses Piece Square Tables (PSTs)
-// More about PSTs : https://en.wikipedia.org/wiki/Evaluation_function#Piece-square_tables
-double evaluate_board(Board board) {
+double evaluate_board(Board& board, bool is_evaluating_white) {
     double score = 0.0;
     for (int i = 0; i < 64; i++) {
         uint64_t* piece_type = get_piece_type_on_cell(board, i);
@@ -609,7 +609,7 @@ double evaluate_board(Board board) {
         score += material_score + PST_score;
     }
 
-    return score;
+    return (is_evaluating_white ? score : -score);
 }
 
 void remove_piece_on_cell(Board& board, uint8_t cell) {
@@ -656,7 +656,7 @@ bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type,
     uint8_t attack_pos = (is_en_passant ? last_placed_cell : new_pos);
     uint64_t* attacked_piece_type = get_piece_type_on_cell(board, attack_pos);
 
-    make_move(board, piece_type, move);
+    make_move(board, move);
     bool is_check = is_in_check(board, is_checking_white);
 
     *piece_type ^= (1ull << original_pos);
@@ -737,7 +737,7 @@ double get_PST_score_of_piece(Board board, uint8_t cell) {
         score += (double)kingEndGamePST[pst_index] * game_phase / 256;
     }
 
-    return score;
+    return (is_piece_on_cell_white(board, cell) ? score : -score);
 }
 
 bool is_valid_target(Board board, uint8_t cell, bool is_attacker_white) {
@@ -746,9 +746,9 @@ bool is_valid_target(Board board, uint8_t cell, bool is_attacker_white) {
     return true;
 }
 
-bool is_cell_empty(Board board, uint8_t cell) { return !get_piece_type_on_cell(board, cell); }
+bool is_cell_empty(Board& board, uint8_t cell) { return !get_piece_type_on_cell(board, cell); }
 
-bool is_piece_on_cell_white(Board board, uint8_t cell) {
+bool is_piece_on_cell_white(Board& board, uint8_t cell) {
     if (!get_piece_type_on_cell(board, cell)) return false;
     uint64_t piece_type = *get_piece_type_on_cell(board, cell);
 
@@ -843,7 +843,7 @@ double get_material_score_of_piece(Board board, uint8_t cell) {
     if (piece_type == board.white_bishops || piece_type == board.black_bishops) score += bishopMaterialScore;
     if (piece_type == board.white_queens || piece_type == board.black_queens) score += queenMaterialScore;
 
-    return score;
+    return (is_piece_on_cell_white(board, cell) ? score : -score);
 }
 
 int get_game_phase(Board board) {

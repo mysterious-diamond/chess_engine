@@ -19,7 +19,6 @@ class Game {
     Game();
 
     void step_game();
-    double evaluate_game();
 
    private:
     // VARIABLE DECLARATIONS
