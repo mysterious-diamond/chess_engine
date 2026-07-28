@@ -1,6 +1,8 @@
 [package]
-name = "ai"
+name = "chess_engine"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
+[lib]
+name = "chess_engine"
+crate-type = ["staticlib"]

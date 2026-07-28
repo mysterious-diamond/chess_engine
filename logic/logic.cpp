@@ -681,17 +681,20 @@ bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type,
     return is_check;
 }
 
-void handle_promotion(Board& board, uint64_t* chosen_promotion_type) {
+void handle_promotion(Board board, uint64_t* chosen_promotion_type) {
+    if (try_promote_pawn(board, chosen_promotion_type)) is_white_turn = !is_white_turn;
+}
+
+bool try_promote_pawn(Board board, uint64_t* chosen_promotion_type) {
     uint8_t pawn_promotion_cell = get_promotion_pawn_cell(board);
-    if (pawn_promotion_cell == 64) return;
+    if (pawn_promotion_cell == 64) return false;
 
     bool is_white = is_piece_on_cell_white(board, pawn_promotion_cell);
     uint64_t* piece_type = (is_white ? &board.white_pawns : &board.black_pawns);
 
     *piece_type ^= (1ull << pawn_promotion_cell);
     *chosen_promotion_type ^= (1ull << pawn_promotion_cell);
-
-    is_white_turn = !is_white_turn;
+    return true;
 }
 
 double get_PST_score_of_piece(Board board, uint8_t cell) {

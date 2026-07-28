@@ -128,6 +128,19 @@ chess/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\chess.dir\build.make CMakeFiles/chess.dir/build
 .PHONY : chess/fast
 
+#=============================================================================
+# Target rules for targets named rust_engine
+
+# Build rule for target.
+rust_engine: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 rust_engine
+.PHONY : rust_engine
+
+# fast build rule for target.
+rust_engine/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\rust_engine.dir\build.make CMakeFiles/rust_engine.dir/build
+.PHONY : rust_engine/fast
+
 C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.obj: C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.cpp.obj
 .PHONY : C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.obj
 
@@ -208,6 +221,7 @@ help:
 	@echo ... depend
 	@echo ... edit_cache
 	@echo ... rebuild_cache
+	@echo ... rust_engine
 	@echo ... chess
 	@echo ... C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.obj
 	@echo ... C_/Users/tonys/OneDrive/Desktop/Projects/Projects/chess_engine/logic/logic.i

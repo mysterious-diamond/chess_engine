@@ -16,7 +16,7 @@
 class Game {
    public:
     Board board;
-    Game();
+    Game(bool is_engine_mode);
 
     void step_game();
 
@@ -25,6 +25,7 @@ class Game {
     // ---------- Game State Variables ------------
     static bool is_selecting_promotion;
     bool is_placement_mode = false;
+    bool is_engine_mode = false;
 
     uint8_t selectedCell = 64;
     uint16_t last_checked_legal_moves[27] = {};

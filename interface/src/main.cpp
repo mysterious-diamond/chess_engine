@@ -7,7 +7,7 @@
 int main() {
     SetTargetFPS(144);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chess Engine");
-    Game game = Game();
+    Game game = Game(true);
 
     while (!WindowShouldClose()) {
         BeginDrawing();

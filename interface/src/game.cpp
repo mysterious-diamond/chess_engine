@@ -5,12 +5,13 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "../../engine/chess_engine.h"
 #include "../../logic/logic.h"
 #include "raylib.h"
 
 bool Game::is_selecting_promotion = false;
 
-Game::Game() {
+Game::Game(bool is_engine_mode) {
     wp = LoadTexture(R"(../images/wp.png)");
     wr = LoadTexture(R"(../images/wr.png)");
     wn = LoadTexture(R"(../images/wn.png)");
@@ -28,20 +29,28 @@ Game::Game() {
     selectedCell = 64;
     std::memset(last_checked_legal_moves, 0, sizeof(*last_checked_legal_moves));
     Board board{};
+
+    this->is_engine_mode = is_engine_mode;
 }
 
 void Game::step_game() {
     if (is_selecting_promotion) {
         handle_promotion_input();
     } else {
-        handle_input();
+        if (is_engine_mode && !is_white_turn) {
+            uint16_t move = get_engine_move(board, 5, false);
+            std::cout << "Engine said" << move << '\n';
+            make_move(board, move);
+        } else {
+            handle_input();
+        }
     }
 
     draw_grid();
     draw_pieces();
     draw_legal_moves();
 
-    if (is_selecting_promotion) render_promotion_board();
+    if (is_selecting_promotion && (!is_engine_mode || is_white_turn)) render_promotion_board();
 }
 
 void Game::handle_promotion_input() {
@@ -85,8 +94,6 @@ void Game::handle_input() {
 
         if (is_placement_mode) {
             handle_turn(clickedCell, cell_texture);
-            std::cout << evaluate_board(board, is_white_turn) << '\n';
-
             return;
         }
 
