@@ -38,9 +38,10 @@ void Game::step_game() {
         handle_promotion_input();
     } else {
         if (is_engine_mode && !is_white_turn) {
-            uint16_t move = get_engine_move(board, 5, false);
+            uint16_t move = get_engine_move(board, 3, false);
             std::cout << "Engine said" << move << '\n';
             make_move(board, move);
+            is_white_turn = !is_white_turn;
         } else {
             handle_input();
         }

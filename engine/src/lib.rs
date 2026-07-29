@@ -3,7 +3,6 @@ mod ffi;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn get_engine_move(mut board: Board, search_depth: u8, is_team_white: bool) -> u16 {
-    println!("Got function call");
     let mut alpha = f64::NEG_INFINITY;
     let beta = f64::INFINITY;
 
@@ -12,20 +11,21 @@ pub extern "C" fn get_engine_move(mut board: Board, search_depth: u8, is_team_wh
 
     for piece_moves in legal_moves {
         for move_data in piece_moves {
-            let mut start_board = board;
+            if move_data == 0 {
+                continue;
+            }
 
+            let mut start_board = board;
             unsafe {
                 make_move(&mut start_board as *mut Board, move_data);
             }
 
-            let score = search(start_board, search_depth, -beta, -alpha, !is_team_white);
+            let score = search(start_board, search_depth - 1, -beta, -alpha, !is_team_white);
 
             if score > alpha {
                 alpha = score;
                 chosen_move = move_data;
             }
-
-            println!("Searched legal move branch {}", move_data);
         }
     }
 
@@ -42,13 +42,23 @@ fn search(mut board: Board, search_depth: u8, mut alpha: f64, beta: f64, is_team
     let legal_moves: Vec<Vec<u16>> = get_all_legal_moves_of_team(&mut board, is_team_white);
     for piece_moves in legal_moves {
         for move_data in piece_moves {
+            if move_data == 0 {
+                continue;
+            }
+
             let mut new_board = board;
             unsafe {
                 make_move(&mut new_board, move_data);
-                if (move_data & 1) == 1 {
-                    try_promote_pawn(new_board, &mut new_board.white_king)
+                if (move_data & 4) == 4 {
+                    let king_type: *mut u64 = match is_team_white {
+                        true => &mut new_board.white_king,
+                        false => &mut new_board.black_king,
+                    };
+
+                    let _ = try_promote_pawn(new_board, king_type);
                 }
             }
+
             let score: f64 = -search(new_board, search_depth - 1, -beta, -alpha, !is_team_white);
 
             if score >= beta {
@@ -84,7 +94,9 @@ fn get_all_legal_moves_of_team(board: &mut Board, is_team_white: bool) -> Vec<Ve
             get_strictly_legal_moves(board, piece_moves.as_mut_ptr(), piece_type);
         }
 
-        legal_moves.push(piece_moves);
+        if !piece_moves.is_empty() {
+            legal_moves.push(piece_moves);
+        }
     }
     legal_moves
 }

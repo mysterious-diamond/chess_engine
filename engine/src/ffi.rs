@@ -16,7 +16,7 @@ pub struct Board {
 }
 
 unsafe extern "C" {
-    pub fn try_promote_pawn(board: Board, chosen_piece_type: *mut u64);
+    pub fn try_promote_pawn(board: Board, chosen_piece_type: *mut u64) -> bool;
     pub fn make_move(board: *mut Board, move_data: u16);
     pub fn get_piece_type_on_cell(board: *mut Board, cell: u8) -> *mut u64;
 
