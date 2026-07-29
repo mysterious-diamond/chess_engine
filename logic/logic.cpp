@@ -3,20 +3,6 @@
 #include <cstdint>
 #include <unordered_map>
 
-uint8_t last_placed_cell = 64;
-
-bool is_en_passant_available = false;
-bool is_white_turn = true;
-
-bool white_in_check = false;
-bool black_in_check = false;
-
-bool is_white_long_castle_available = true;
-bool is_white_short_castle_available = true;
-
-bool is_black_long_castle_available = true;
-bool is_black_short_castle_available = true;
-
 bool is_in_check(Board board, bool is_checking_white) {
     uint8_t king_cell = 64;
 
@@ -29,7 +15,7 @@ bool is_in_check(Board board, bool is_checking_white) {
 
     for (int cell = 0; cell < 64; cell++) {
         uint16_t legal_moves[27] = {};
-        get_piece_legal_moves(board, &legal_moves[0], cell);
+        get_piece_legal_moves(board, &legal_moves[0], 0, cell);
 
         for (uint16_t move : legal_moves) {
             if (move == 0) break;
@@ -42,14 +28,14 @@ bool is_in_check(Board board, bool is_checking_white) {
     return false;
 }
 
-void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint8_t cell) {
+void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell) {
     uint16_t legal_moves[27] = {};
     if (cell < 0 || cell > 63) return;
 
     uint64_t* piece_type = get_piece_type_on_cell(board, cell);
 
     if (piece_type == &board.white_pawns || piece_type == &board.black_pawns) {
-        get_pawn_legal_moves(board, legal_moves, cell);
+        get_pawn_legal_moves(board, legal_moves, last_move, cell);
     } else if (piece_type == &board.white_rooks || piece_type == &board.black_rooks) {
         get_rook_legal_moves(board, legal_moves, cell);
     } else if (piece_type == &board.white_knights || piece_type == &board.black_knights) {
@@ -67,7 +53,7 @@ void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint8_t cell) {
     }
 }
 
-void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
+void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell) {
     // Make sure array is set to 0 so it doesnt return garbage values
     uint16_t legal_moves[27] = {};
     bool is_white = is_piece_on_cell_white(board, cell);
@@ -110,7 +96,7 @@ void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
         moveN++;
     }
 
-    if (is_en_passant_available) try_insert_pawn_enpassant_move(board, legal_moves, cell, moveN);
+    if (last_move & (1ull << 4)) try_insert_pawn_enpassant_move(board, legal_moves, last_move, cell, moveN);
 
     for (int i = 0; i < 27; i++) {
         array_ptr[i] = legal_moves[i];
@@ -497,6 +483,7 @@ void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
     }
 }
 
+/*
 void handle_move(Board& board, uint64_t* piece_type, uint16_t move) {
     make_move(board, move);
 
@@ -535,8 +522,9 @@ void handle_move(Board& board, uint64_t* piece_type, uint16_t move) {
     uint8_t pawn_promotion_cell = get_promotion_pawn_cell(board);
     if (pawn_promotion_cell == 64) is_white_turn = !is_white_turn;
 }
+*/
 
-void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], uint8_t cell, int moveN) {
+void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], uint16_t last_move, uint8_t cell, int moveN) {
     // If enemy moved a pawn 2 spaces forward to beside a friendly pawn,
     // the friendly pawn can move to the space the pawn skipped and
     // capture the pawn.
@@ -552,8 +540,9 @@ void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], ui
     int resulting_left = (is_white ? cell + 7 : cell - 7);
     int resulting_right = (is_white ? cell + 9 : cell - 9);
 
-    bool isLeftLastMoved = (left == last_placed_cell);
-    bool isRightLastMoved = (right == last_placed_cell);
+    uint8_t last_dest_cell = (last_move >> 4) & 64;
+    bool isLeftLastMoved = (left == last_dest_cell);
+    bool isRightLastMoved = (right == last_dest_cell);
 
     bool isLegalLeft = is_valid_target(board, left, is_white) && rank == leftRank;
     bool isLegalRight = is_valid_target(board, right, is_white) && rank == rightRank;
@@ -565,7 +554,7 @@ void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], ui
     }
 };
 
-void make_move(Board& board, uint16_t move) {
+void make_move(Board& board, uint16_t last_move, uint16_t move) {
     uint8_t original_pos = (move >> 10) & 63ull;
     uint8_t new_pos = (move >> 4) & 63ull;
 
@@ -577,7 +566,7 @@ void make_move(Board& board, uint16_t move) {
     uint64_t* piece_type = get_piece_type_on_cell(board, original_pos);
 
     if (is_capture) {
-        uint8_t attack_pos = (is_en_passant ? last_placed_cell : new_pos);
+        uint8_t attack_pos = (is_en_passant ? (last_move >> 4) & 64 : new_pos);
         remove_piece_on_cell(board, attack_pos);
     } else if (is_castle) {
         if (original_pos == new_pos + 2) {
@@ -619,7 +608,7 @@ void remove_piece_on_cell(Board& board, uint8_t cell) {
     *piece_type ^= (1ull << cell);
 }
 
-void get_strictly_legal_moves(Board& board, uint16_t* array_ptr, uint64_t* piece_type) {
+void get_strictly_legal_moves(Board& board, uint16_t last_move, uint16_t* array_ptr, uint64_t* piece_type) {
     uint16_t strictly_legal_moves[27] = {};
 
     uint8_t amount_of_moves = 0;
@@ -628,12 +617,12 @@ void get_strictly_legal_moves(Board& board, uint16_t* array_ptr, uint64_t* piece
         if (move == 0) break;
 
         bool is_white = is_piece_on_cell_white(board, (move >> 10) & 63ull);
-        bool is_check = (is_white && white_in_check) || (!is_white && black_in_check);
+        bool is_check = is_in_check(board, is_white);
 
         bool is_castle = move & (1ull << 2);
         if (is_castle && is_check) continue;
 
-        bool does_move_cause_check = try_make_move_and_check_if_causes_check(board, piece_type, move);
+        bool does_move_cause_check = try_make_move_and_check_if_causes_check(board, piece_type, last_move, move);
         if (does_move_cause_check) continue;
 
         strictly_legal_moves[amount_of_moves] = move;
@@ -645,7 +634,7 @@ void get_strictly_legal_moves(Board& board, uint16_t* array_ptr, uint64_t* piece
     }
 }
 
-bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type, uint16_t move) {
+bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type, uint16_t last_move, uint16_t move) {
     uint8_t original_pos = (move >> 10) & 63ull;
     uint8_t new_pos = (move >> 4) & 63ull;
 
@@ -653,10 +642,10 @@ bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type,
     bool is_castle = (move & (1ull << 2));
     bool is_checking_white = is_piece_on_cell_white(board, original_pos);
 
-    uint8_t attack_pos = (is_en_passant ? last_placed_cell : new_pos);
+    uint8_t attack_pos = (is_en_passant ? (last_move >> 4) & 64 : new_pos);
     uint64_t* attacked_piece_type = get_piece_type_on_cell(board, attack_pos);
 
-    make_move(board, move);
+    make_move(board, last_move, move);
     bool is_check = is_in_check(board, is_checking_white);
 
     *piece_type ^= (1ull << original_pos);
@@ -679,10 +668,6 @@ bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type,
     }
 
     return is_check;
-}
-
-void handle_promotion(Board board, uint64_t* chosen_promotion_type) {
-    if (try_promote_pawn(board, chosen_promotion_type)) is_white_turn = !is_white_turn;
 }
 
 bool try_promote_pawn(Board board, uint64_t* chosen_promotion_type) {

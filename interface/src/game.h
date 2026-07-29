@@ -13,6 +13,21 @@
 #define PROMOTION_BOARD_HEIGHT 400
 #define PROMOTION_BOARD_WIDTH 100
 
+
+extern uint8_t last_placed_cell;
+
+extern bool is_en_passant_available;
+extern bool is_white_turn;
+
+extern bool white_in_check;
+extern bool black_in_check;
+
+extern bool is_white_long_castle_available;
+extern bool is_white_short_castle_available;
+
+extern bool is_black_long_castle_available;
+extern bool is_black_short_castle_available;
+
 class Game {
    public:
     Board board;

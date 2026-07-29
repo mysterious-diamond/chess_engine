@@ -19,45 +19,31 @@ struct Board {
     uint64_t black_king{1152921504606846976ull};
 };
 
-extern uint8_t last_placed_cell;
-
-extern bool is_en_passant_available;
-extern bool is_white_turn;
-
-extern bool white_in_check;
-extern bool black_in_check;
-
-extern bool is_white_long_castle_available;
-extern bool is_white_short_castle_available;
-
-extern bool is_black_long_castle_available;
-extern bool is_black_short_castle_available;
-
 extern "C" {
 bool is_in_check(Board board, bool is_checking_white);
 
-void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint8_t cell);
+void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell);
 
-void handle_move(Board& board, uint64_t* piece_type, uint16_t move);
-void get_strictly_legal_moves(Board& board, uint16_t* array_ptr, uint64_t* piece_type);
-bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type, uint16_t move);
+void get_strictly_legal_moves(Board& board, uint16_t last_move, uint16_t* array_ptr, uint64_t* piece_type);
+bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type, uint16_t last_move, uint16_t move);
 
-void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
+void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell);
 void get_rook_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
 void get_bishop_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
 void get_knight_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
 void get_queen_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
 void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
 
-void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], uint8_t cell, int moveN);
-void make_move(Board& board, uint16_t move);
+void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], uint16_t last_move, uint8_t cell, int moveN);
+
+// You can leave last_move parameter blank if it's not en passant
+void make_move(Board& board, uint16_t last_move, uint16_t move);
 
 // This implementation of the evaluation function uses Piece Square Tables (PSTs)
 // More about PSTs : https://en.wikipedia.org/wiki/Evaluation_function#Piece-square_tables
 double evaluate_board(Board& board, bool is_evaluating_white);
 
 void remove_piece_on_cell(Board& board, uint8_t cell);
-void handle_promotion(Board board, uint64_t* chosen_promotion_type);
 bool try_promote_pawn(Board board, uint64_t* chosen_promotion_type);
 double get_material_score_of_piece(Board board, uint8_t cell);
 

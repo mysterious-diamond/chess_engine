@@ -10,6 +10,19 @@
 #include "raylib.h"
 
 bool Game::is_selecting_promotion = false;
+uint8_t last_placed_cell = 64;
+
+bool is_en_passant_available = false;
+bool is_white_turn = true;
+
+bool white_in_check = false;
+bool black_in_check = false;
+
+bool is_white_long_castle_available = true;
+bool is_white_short_castle_available = true;
+
+bool is_black_long_castle_available = true;
+bool is_black_short_castle_available = true;
 
 Game::Game(bool is_engine_mode) {
     wp = LoadTexture(R"(../images/wp.png)");
