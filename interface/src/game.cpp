@@ -10,7 +10,7 @@
 #include "raylib.h"
 
 bool Game::is_selecting_promotion = false;
-uint8_t last_placed_cell = 64;
+uint16_t last_move = 0;
 
 bool is_en_passant_available = false;
 bool is_white_turn = true;
@@ -51,9 +51,9 @@ void Game::step_game() {
         handle_promotion_input();
     } else {
         if (is_engine_mode && !is_white_turn) {
-            uint16_t move = get_engine_move(board, 3, false);
+            uint16_t move = get_engine_move(board, 4, last_move, false);
             std::cout << "Engine said" << move << '\n';
-            make_move(board, move);
+            make_move(board, last_move, move);
             is_white_turn = !is_white_turn;
         } else {
             handle_input();
@@ -129,13 +129,13 @@ void Game::draw_grid() {
 
             Color color;
             if (j & 1 && i & 1)
-                color = (is_white_turn ? this->whiteCell : this->greenCell);
+                color = (is_white_turn || is_engine_mode ? this->whiteCell : this->greenCell);
             else if (j & 1)
-                color = (is_white_turn ? this->greenCell : this->whiteCell);
+                color = (is_white_turn || is_engine_mode ? this->greenCell : this->whiteCell);
             else if (i & 1)
-                color = (is_white_turn ? this->greenCell : this->whiteCell);
+                color = (is_white_turn || is_engine_mode ? this->greenCell : this->whiteCell);
             else
-                color = (is_white_turn ? this->whiteCell : this->greenCell);
+                color = (is_white_turn || is_engine_mode ? this->whiteCell : this->greenCell);
 
             DrawRectangle(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE, color);
         }
@@ -149,7 +149,7 @@ void Game::draw_pieces() {
         int x = (i % 8) * CELL_SIZE;
         int y = SCREEN_HEIGHT - (i / 8 + 1) * CELL_SIZE;
 
-        if (!is_white_turn) y = 800 - y - 100;
+        if (!is_white_turn && !is_engine_mode) y = 800 - y - 100;
 
         if (white_in_check && piece_texture.id == wk.id || black_in_check && piece_texture.id == bk.id) {
             Rectangle rect = {(float)x, (float)y, CELL_SIZE, CELL_SIZE};
@@ -189,15 +189,16 @@ void Game::draw_legal_moves() {
 void Game::render_promotion_board() {
     int promotionCell = get_promotion_pawn_cell(board);
     if (promotionCell == 64) return;
+
     if (!is_white_turn) {
         // if is black turn, reverse the cell position so the menu appears upright.
         // we can also do this by just changing the variables below, but it is simply easier to just change the promotionCell.
         // Do note that the original promotionCell variable is correct, we are simply making things easier.
 
         int promotionFile = promotionCell % 8;
-        int newPromotionRank = 8 - (promotionCell / 8) - 1;
+        int promotionRank = 8 - promotionCell / 8 - 1;
 
-        promotionCell = promotionFile + newPromotionRank * 8;
+        promotionCell = promotionFile + promotionRank * 8;
     }
 
     // Draw the promotion board
@@ -307,6 +308,45 @@ void Game::handle_black_placement(uint8_t clickedCell) {
     reset_placement_variables();
 }
 
+void Game::handle_move(Board& board, uint64_t* piece_type, uint16_t move) {
+    make_move(board, last_move, move);
+
+    uint8_t original_pos = (move >> 10) & 63ull;
+    uint8_t destination_pos = (move >> 4) & 63ull;
+
+    last_move = move;
+    bool is_castle = move & (1ull << 2);
+
+    is_en_passant_available = false;
+    if (*piece_type == board.white_pawns && destination_pos == original_pos + 16)
+        is_en_passant_available = true;
+    else if (*piece_type == board.black_pawns && destination_pos == original_pos - 16)
+        is_en_passant_available = true;
+
+    if (*piece_type == board.white_rooks) {
+        if (original_pos == 0)
+            is_white_long_castle_available = false;
+        else if (original_pos == 7)
+            is_white_short_castle_available = false;
+    } else if (*piece_type == board.black_rooks) {
+        if (original_pos == 56)
+            is_black_long_castle_available = false;
+        else if (original_pos == 63)
+            is_black_short_castle_available = false;
+    }
+
+    if (*piece_type == board.white_king) {
+        is_white_long_castle_available = false;
+        is_white_short_castle_available = false;
+    } else if (*piece_type == board.black_king) {
+        is_black_long_castle_available = false;
+        is_black_short_castle_available = false;
+    }
+
+    uint8_t pawn_promotion_cell = get_promotion_pawn_cell(board);
+    if (pawn_promotion_cell == 64) is_white_turn = !is_white_turn;
+}
+
 void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture) {
     if (is_placement_mode) {
         handle_white_placement(clickedCell);
@@ -316,8 +356,10 @@ void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
     if (!is_piece_on_cell_white(board, clickedCell)) return;
     uint64_t* type = get_piece_type_on_cell(board, clickedCell);
 
-    get_piece_legal_moves(board, &last_checked_legal_moves[0], clickedCell);
-    get_strictly_legal_moves(board, &last_checked_legal_moves[0], type);
+    uint8_t castle_flags = is_black_long_castle_available * 8 + is_black_short_castle_available * 4 +
+                           is_white_short_castle_available * 2 + is_white_long_castle_available;
+    get_piece_legal_moves(board, &last_checked_legal_moves[0], last_move, clickedCell, castle_flags);
+    get_strictly_legal_moves(board, last_move, &last_checked_legal_moves[0], type);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -332,8 +374,11 @@ void Game::handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
     if (is_piece_on_cell_white(board, clickedCell) && !is_cell_empty(board, clickedCell)) return;
     uint64_t* type = get_piece_type_on_cell(board, clickedCell);
 
-    get_piece_legal_moves(board, &last_checked_legal_moves[0], clickedCell);
-    get_strictly_legal_moves(board, &last_checked_legal_moves[0], type);
+    uint8_t castle_flags = is_black_long_castle_available * 8 + is_black_short_castle_available * 4 +
+                           is_white_short_castle_available * 2 + is_white_long_castle_available;
+
+    get_piece_legal_moves(board, &last_checked_legal_moves[0], last_move, clickedCell, castle_flags);
+    get_strictly_legal_moves(board, last_move, &last_checked_legal_moves[0], type);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -390,7 +435,14 @@ void Game::handle_white_promotion_choice(int mouseCell, int promotionCell) {
     for (auto option : promotionSelectionCells) {
         if (option.first != mouseCell) continue;
 
-        handle_promotion(board, option.second);
+        uint8_t choice = 0;
+        if (option.second == &board.white_queens) choice = 1;
+        if (option.second == &board.white_rooks) choice = 2;
+        if (option.second == &board.white_knights) choice = 3;
+        if (option.second == &board.white_bishops) choice = 4;
+
+        try_promote_pawn(board, choice);
+        is_white_turn = !is_white_turn;
         is_selecting_promotion = false;
     }
 }
@@ -405,7 +457,14 @@ void Game::handle_black_promotion_choice(int mouseCell, int promotionCell) {
     for (auto option : promotionSelectionCells) {
         if (option.first != mouseCell) continue;
 
-        handle_promotion(board, option.second);
+        uint8_t choice = 0;
+        if (option.second == &board.black_queens) choice = 1;
+        if (option.second == &board.black_rooks) choice = 2;
+        if (option.second == &board.black_knights) choice = 3;
+        if (option.second == &board.black_bishops) choice = 4;
+
+        try_promote_pawn(board, choice);
+        is_white_turn = !is_white_turn;
         is_selecting_promotion = false;
     }
 }

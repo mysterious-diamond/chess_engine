@@ -14,8 +14,6 @@
 #define PROMOTION_BOARD_WIDTH 100
 
 
-extern uint8_t last_placed_cell;
-
 extern bool is_en_passant_available;
 extern bool is_white_turn;
 
@@ -62,6 +60,8 @@ class Game {
 
     void handle_white_placement(uint8_t clickedCell);
     void handle_black_placement(uint8_t clickedCell);   
+
+    void handle_move(Board& board, uint64_t *piece_type, uint16_t move);
 
     void handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture);
     void handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture);

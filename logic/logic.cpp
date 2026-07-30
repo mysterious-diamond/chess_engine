@@ -15,7 +15,7 @@ bool is_in_check(Board board, bool is_checking_white) {
 
     for (int cell = 0; cell < 64; cell++) {
         uint16_t legal_moves[27] = {};
-        get_piece_legal_moves(board, &legal_moves[0], 0, cell);
+        get_piece_legal_moves(board, &legal_moves[0], 0, cell, 0);
 
         for (uint16_t move : legal_moves) {
             if (move == 0) break;
@@ -28,7 +28,7 @@ bool is_in_check(Board board, bool is_checking_white) {
     return false;
 }
 
-void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell) {
+void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell, uint8_t castle_flags) {
     uint16_t legal_moves[27] = {};
     if (cell < 0 || cell > 63) return;
 
@@ -45,7 +45,7 @@ void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint16_t last_move
     } else if (piece_type == &board.white_queens || piece_type == &board.black_queens) {
         get_queen_legal_moves(board, legal_moves, cell);
     } else if (piece_type == &board.white_king || piece_type == &board.black_king) {
-        get_king_legal_moves(board, legal_moves, cell);
+        get_king_legal_moves(board, legal_moves, cell, castle_flags);
     }
 
     for (int i = 0; i < 27; i++) {
@@ -81,7 +81,7 @@ void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint16_t last_move, 
     // Left top square checking
     target_cell = cell + 7 * direction;
     bool is_empty = is_cell_empty(board, target_cell);
-    if (is_valid_target(board, target_cell, is_white) && !is_empty && rank != target_cell / 8) {
+    if (is_valid_target(board, target_cell, is_white) && !is_empty && rank == target_cell / 8 - 1) {
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
         legal_moves[moveN] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
         moveN++;
@@ -90,7 +90,7 @@ void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint16_t last_move, 
     // Check Right Top Square For Enemy
     target_cell = cell + 9 * direction;
     is_empty = is_cell_empty(board, target_cell);
-    if (is_valid_target(board, target_cell, is_white) && !is_empty && rank != target_cell / 8) {
+    if (is_valid_target(board, target_cell, is_white) && !is_empty && rank == target_cell / 8 - 1) {
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
         legal_moves[moveN] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
         moveN++;
@@ -388,7 +388,7 @@ void get_queen_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
     }
 }
 
-void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
+void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell, uint8_t castle_flags) {
     // We will make an offset array, then loop through all those offsets
     // to get the king's neighbors since a king's legal moves are just 1 cell in all the
     // directions around it.
@@ -421,7 +421,7 @@ void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
     }
 
     if (is_attacker_white) {
-        if (is_white_long_castle_available) {
+        if (castle_flags & 1) {
             bool blockedPath = false;
             for (int check_cell = cell - 1; check_cell > 0; check_cell--) {
                 if (is_cell_empty(board, check_cell)) continue;
@@ -435,7 +435,7 @@ void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
             }
         }
 
-        if (is_white_short_castle_available) {
+        if (castle_flags & 2) {
             bool blockedPath = false;
             for (int check_cell = cell + 1; check_cell < 7; check_cell++) {
                 if (is_cell_empty(board, check_cell)) continue;
@@ -449,7 +449,7 @@ void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
             }
         }
     } else {
-        if (is_black_long_castle_available) {
+        if (castle_flags & 4) {
             bool blockedPath = false;
             for (int check_cell = cell - 1; check_cell > 56; check_cell--) {
                 if (is_cell_empty(board, check_cell)) continue;
@@ -463,7 +463,7 @@ void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
             }
         }
 
-        if (is_black_short_castle_available) {
+        if (castle_flags & 8) {
             bool blockedPath = false;
             for (int check_cell = cell + 1; check_cell < 63; check_cell++) {
                 if (is_cell_empty(board, check_cell)) continue;
@@ -482,47 +482,6 @@ void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell) {
         array_ptr[i] = legal_moves[i];
     }
 }
-
-/*
-void handle_move(Board& board, uint64_t* piece_type, uint16_t move) {
-    make_move(board, move);
-
-    uint8_t original_pos = (move >> 10) & 63ull;
-    uint8_t destination_pos = (move >> 4) & 63ull;
-
-    last_placed_cell = destination_pos;
-    bool is_castle = move & (1ull << 2);
-
-    is_en_passant_available = false;
-    if (*piece_type == board.white_pawns && destination_pos == original_pos + 16)
-        is_en_passant_available = true;
-    else if (*piece_type == board.black_pawns && destination_pos == original_pos - 16)
-        is_en_passant_available = true;
-
-    if (*piece_type == board.white_rooks) {
-        if (original_pos == 0)
-            is_white_long_castle_available = false;
-        else if (original_pos == 7)
-            is_white_short_castle_available = false;
-    } else if (*piece_type == board.black_rooks) {
-        if (original_pos == 56)
-            is_black_long_castle_available = false;
-        else if (original_pos == 63)
-            is_black_short_castle_available = false;
-    }
-
-    if (*piece_type == board.white_king) {
-        is_white_long_castle_available = false;
-        is_white_short_castle_available = false;
-    } else if (*piece_type == board.black_king) {
-        is_black_long_castle_available = false;
-        is_black_short_castle_available = false;
-    }
-
-    uint8_t pawn_promotion_cell = get_promotion_pawn_cell(board);
-    if (pawn_promotion_cell == 64) is_white_turn = !is_white_turn;
-}
-*/
 
 void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], uint16_t last_move, uint8_t cell, int moveN) {
     // If enemy moved a pawn 2 spaces forward to beside a friendly pawn,
@@ -670,7 +629,7 @@ bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type,
     return is_check;
 }
 
-bool try_promote_pawn(Board board, uint64_t* chosen_promotion_type) {
+bool try_promote_pawn(Board& board, uint8_t chosen_promotion_type) {
     uint8_t pawn_promotion_cell = get_promotion_pawn_cell(board);
     if (pawn_promotion_cell == 64) return false;
 
@@ -678,7 +637,22 @@ bool try_promote_pawn(Board board, uint64_t* chosen_promotion_type) {
     uint64_t* piece_type = (is_white ? &board.white_pawns : &board.black_pawns);
 
     *piece_type ^= (1ull << pawn_promotion_cell);
-    *chosen_promotion_type ^= (1ull << pawn_promotion_cell);
+    if (chosen_promotion_type == 1) {
+        uint64_t* queen_type = (is_white ? &board.white_queens : &board.black_queens);
+        *queen_type ^= (1ull << pawn_promotion_cell);
+    } else if (chosen_promotion_type == 2) {
+        uint64_t* rook_type = (is_white ? &board.white_rooks : &board.black_rooks);
+        *rook_type ^= (1ull << pawn_promotion_cell);
+    } else if (chosen_promotion_type == 3) {
+        uint64_t* knight_type = (is_white ? &board.white_bishops : &board.black_knights);
+        *knight_type ^= (1ull << pawn_promotion_cell);
+    } else if (chosen_promotion_type == 4) {
+        uint64_t* bishop_type = (is_white ? &board.white_bishops : &board.black_bishops);
+        *bishop_type ^= (1ull << pawn_promotion_cell);
+    } else {
+        return false;
+    }
+
     return true;
 }
 

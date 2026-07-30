@@ -6,7 +6,7 @@
 #include <cstdint>
 
 extern "C" {
-    uint16_t get_engine_move(Board board, uint8_t search_depth, bool is_team_white);
+    uint16_t get_engine_move(Board board, uint8_t search_depth, uint16_t last_move, bool is_team_white);
 }
 
 #endif

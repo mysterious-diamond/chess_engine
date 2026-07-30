@@ -22,7 +22,9 @@ struct Board {
 extern "C" {
 bool is_in_check(Board board, bool is_checking_white);
 
-void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell);
+// Give castle availability flags in the pattern : 
+// first bit = white long castle, second bit = white short castle, third bit = black long castle, fourth bit = black short castle
+void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell, uint8_t castle_flags);
 
 void get_strictly_legal_moves(Board& board, uint16_t last_move, uint16_t* array_ptr, uint64_t* piece_type);
 bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type, uint16_t last_move, uint16_t move);
@@ -32,7 +34,7 @@ void get_rook_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
 void get_bishop_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
 void get_knight_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
 void get_queen_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
-void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
+void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell, uint8_t castle_flags);
 
 void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], uint16_t last_move, uint8_t cell, int moveN);
 
@@ -44,7 +46,9 @@ void make_move(Board& board, uint16_t last_move, uint16_t move);
 double evaluate_board(Board& board, bool is_evaluating_white);
 
 void remove_piece_on_cell(Board& board, uint8_t cell);
-bool try_promote_pawn(Board board, uint64_t* chosen_promotion_type);
+
+// chosen_promotion_type : 1 for king, 2 for rook, 3 for knight, 4 for bishop
+bool try_promote_pawn(Board& board, uint8_t chosen_promotion_type);
 double get_material_score_of_piece(Board board, uint8_t cell);
 
 bool is_cell_empty(Board& board, uint8_t cell);
