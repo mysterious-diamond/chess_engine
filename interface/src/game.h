@@ -61,7 +61,7 @@ class Game {
     void handle_white_placement(uint8_t clickedCell);
     void handle_black_placement(uint8_t clickedCell);   
 
-    void handle_move(Board& board, uint64_t *piece_type, uint16_t move);
+    void handle_move(Board& board, uint16_t move);
 
     void handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture);
     void handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture);

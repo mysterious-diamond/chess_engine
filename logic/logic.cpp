@@ -81,7 +81,7 @@ void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint16_t last_move, 
     // Left top square checking
     target_cell = cell + 7 * direction;
     bool is_empty = is_cell_empty(board, target_cell);
-    if (is_valid_target(board, target_cell, is_white) && !is_empty && rank == target_cell / 8 - 1) {
+    if (is_valid_target(board, target_cell, is_white) && !is_empty && rank == target_cell / 8 - 1 * direction) {
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
         legal_moves[moveN] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
         moveN++;
@@ -90,7 +90,7 @@ void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint16_t last_move, 
     // Check Right Top Square For Enemy
     target_cell = cell + 9 * direction;
     is_empty = is_cell_empty(board, target_cell);
-    if (is_valid_target(board, target_cell, is_white) && !is_empty && rank == target_cell / 8 - 1) {
+    if (is_valid_target(board, target_cell, is_white) && !is_empty && rank == target_cell / 8 - 1 * direction) {
         bool is_cell_on_last_rank = (target_cell / 8 == (is_white ? 7 : 0));
         legal_moves[moveN] = generate_move(cell, target_cell, 0, 0, is_cell_on_last_rank, 1);
         moveN++;
@@ -543,21 +543,6 @@ void make_move(Board& board, uint16_t last_move, uint16_t move) {
 
     *piece_type ^= (1ull << original_pos);
     *piece_type ^= (1ull << new_pos);
-}
-
-double evaluate_board(Board& board, bool is_evaluating_white) {
-    double score = 0.0;
-    for (int i = 0; i < 64; i++) {
-        uint64_t* piece_type = get_piece_type_on_cell(board, i);
-        if (!piece_type) continue;
-
-        int material_score = get_material_score_of_piece(board, i);
-        int PST_score = get_PST_score_of_piece(board, i);
-
-        score += material_score + PST_score;
-    }
-
-    return (is_evaluating_white ? score : -score);
 }
 
 void remove_piece_on_cell(Board& board, uint8_t cell) {

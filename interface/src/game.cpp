@@ -53,7 +53,7 @@ void Game::step_game() {
         if (is_engine_mode && !is_white_turn) {
             uint16_t move = get_engine_move(board, 4, last_move, false);
             std::cout << "Engine said" << move << '\n';
-            make_move(board, last_move, move);
+            handle_move(board, move);
             is_white_turn = !is_white_turn;
         } else {
             handle_input();
@@ -282,7 +282,7 @@ void Game::handle_white_placement(uint8_t clickedCell) {
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
     if (move) {
         uint64_t* piece_type = get_piece_type_on_cell(board, selectedCell);
-        handle_move(board, piece_type, move);
+        handle_move(board, move);
 
         if (get_promotion_pawn_cell(board) != 64) is_selecting_promotion = true;
     }
@@ -300,7 +300,7 @@ void Game::handle_black_placement(uint8_t clickedCell) {
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
     if (move) {
         uint64_t* piece_type = get_piece_type_on_cell(board, selectedCell);
-        handle_move(board, piece_type, move);
+        handle_move(board, move);
 
         if (get_promotion_pawn_cell(board) != 64) is_selecting_promotion = true;
     }
@@ -308,11 +308,13 @@ void Game::handle_black_placement(uint8_t clickedCell) {
     reset_placement_variables();
 }
 
-void Game::handle_move(Board& board, uint64_t* piece_type, uint16_t move) {
+void Game::handle_move(Board& board, uint16_t move) {
     make_move(board, last_move, move);
 
     uint8_t original_pos = (move >> 10) & 63ull;
     uint8_t destination_pos = (move >> 4) & 63ull;
+
+    uint64_t* piece_type = get_piece_type_on_cell(board, destination_pos);
 
     last_move = move;
     bool is_castle = move & (1ull << 2);
@@ -345,6 +347,9 @@ void Game::handle_move(Board& board, uint64_t* piece_type, uint16_t move) {
 
     uint8_t pawn_promotion_cell = get_promotion_pawn_cell(board);
     if (pawn_promotion_cell == 64) is_white_turn = !is_white_turn;
+
+    white_in_check = is_in_check(board, true);
+    black_in_check = is_in_check(board, false);
 }
 
 void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture) {
