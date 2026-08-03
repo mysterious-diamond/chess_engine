@@ -15,6 +15,7 @@ int main() {
 
     if (ans == "y") is_engine_move = true;
 
+    SetTraceLogLevel(LOG_NONE);
     SetTargetFPS(144);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chess Engine");
 

@@ -54,7 +54,6 @@ void Game::step_game() {
             uint16_t move = get_engine_move(board, 4, last_move, false);
             std::cout << "Engine said" << move << '\n';
             handle_move(board, move);
-            is_white_turn = !is_white_turn;
         } else {
             handle_input();
         }

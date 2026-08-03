@@ -22,7 +22,6 @@ unsafe extern "C" {
 
     pub fn get_piece_legal_moves(board: *mut Board, array_ptr: *mut u16, last_move: u16, cell: u8, castle_flags: u8);
     pub fn get_strictly_legal_moves(board: *mut Board, last_move: u16, array_ptr: *mut u16, piece_type: *mut u64);
-    pub fn evaluate_board(board: *mut Board, is_evaluating_white: bool) -> f64;
 
     pub fn is_cell_empty(board: *mut Board, cell: u8) -> bool;
     pub fn is_piece_on_cell_white(board: *mut Board, cell: u8) -> bool;
