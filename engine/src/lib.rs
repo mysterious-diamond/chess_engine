@@ -22,7 +22,7 @@ pub extern "C" fn get_engine_move(mut board: Board, search_depth: u8, last_move:
             make_move(&mut start_board as *mut Board, last_move, move_data);
         }
 
-        let score = search(start_board, search_depth - 1, -beta, -alpha, last_move, !is_team_white);
+        let score = -search(start_board, search_depth - 1, -beta, -alpha, move_data, !is_team_white);
 
         if score > alpha {
             alpha = score;
@@ -40,6 +40,10 @@ fn search(mut board: Board, search_depth: u8, mut alpha: f64, beta: f64, last_mo
 
     let mut legal_moves: Vec<u16> = get_all_legal_moves_of_team(&mut board, last_move, is_team_white);
     legal_moves.retain(|&m| m != 0);
+
+    if legal_moves.is_empty() {
+        return f64::NEG_INFINITY;
+    }
     legal_moves.sort_by_key(|m| -score_move(m, &mut board));
 
     if legal_moves.is_empty() {
@@ -84,7 +88,12 @@ fn quiescence(mut board: Board, mut alpha: f64, beta: f64, last_move: u16, is_te
         alpha = eval;
     }
 
-    let moves: Vec<u16> = get_all_legal_moves_of_team(&mut board, last_move, is_team_white);
+    let mut moves: Vec<u16> = get_all_legal_moves_of_team(&mut board, last_move, is_team_white);
+    moves.retain(|&m| m != 0);
+    if moves.is_empty() {
+        return f64::NEG_INFINITY;
+    }
+
     let captures: Vec<u16> = moves.into_iter().filter(|&m| m & 1 == 1).collect();
 
     for mv in captures {
@@ -122,11 +131,15 @@ fn evaluate_board(board: &mut Board, is_evaluating_white: bool) -> f64 {
             continue;
         }
 
-        score += get_piece_value(board, cell) as f64;
+        let value: f64 = get_piece_value(board, cell) as f64;
+        let is_white: bool = unsafe { is_piece_on_cell_white(board, cell) };
+
+        score += if is_white { value } else { -value };
     }
 
     score += 20.0;
     score -= get_double_pawn_penalty(board, is_evaluating_white);
+    score += get_double_pawn_penalty(board, !is_evaluating_white);
     if is_evaluating_white { score } else { -score }
 }
 
@@ -139,8 +152,8 @@ fn score_move(move_data: &u16, board: &mut Board) -> i64 {
     let from: u8 = ((move_data >> 10) & 63) as u8;
     let to: u8 = ((move_data >> 4) & 63) as u8;
 
-    let victim: i64 = get_piece_value(board, to);
-    let attacker: i64 = get_piece_value(board, from);
+    let victim: i64 = get_material_score_of_piece(board, to);
+    let attacker: i64 = get_material_score_of_piece(board, from);
 
     victim * 10 - attacker
 }
@@ -155,7 +168,7 @@ fn get_pst_score_of_piece(board: &mut Board, cell: u8) -> i64 {
         is_white = is_piece_on_cell_white(board as *mut Board, cell);
     }
 
-    let pst_index: usize = if is_white { cell as usize } else { (63 - cell) as usize };
+    let pst_index: usize = if is_white { cell as usize } else { (cell ^ 56) as usize };
     let game_phase = get_game_phase(board) as i64;
     let piece_type: u64;
 
@@ -244,7 +257,7 @@ fn get_game_phase(board: &Board) -> i16 {
     game_phase = game_phase.clamp(0, 24);
 
     // Scale from 0-24 range to 0-256 range proportionally
-    game_phase * (256 / 24)
+    (game_phase * 256) / 24
 }
 
 fn get_double_pawn_penalty(board: &Board, is_checking_white: bool) -> f64 {
