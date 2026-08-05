@@ -1,7 +1,9 @@
 use crate::ffi::*;
+use crate::logic::*;
 use crate::pst::*;
 
 mod ffi;
+mod logic;
 mod pst;
 
 #[unsafe(no_mangle)]
@@ -122,17 +124,14 @@ fn quiescence(mut board: Board, mut alpha: f64, beta: f64, last_move: u16, is_te
 fn evaluate_board(board: &mut Board, is_evaluating_white: bool) -> f64 {
     let mut score: f64 = 0.0;
     for cell in 0..64 {
-        let piece_type: *mut u64;
-        unsafe {
-            piece_type = get_piece_type_on_cell(board, cell);
-        }
+        let piece_type: *mut u64 = get_piece_type_on_cell(board, cell);
 
         if piece_type.is_null() {
             continue;
         }
 
         let value: f64 = get_piece_value(board, cell) as f64;
-        let is_white: bool = unsafe { is_piece_on_cell_white(board, cell) };
+        let is_white: bool = is_piece_on_cell_white(board, cell);
 
         score += if is_white { value } else { -value };
     }
@@ -164,9 +163,7 @@ fn get_piece_value(board: &mut Board, cell: u8) -> i64 {
 
 fn get_pst_score_of_piece(board: &mut Board, cell: u8) -> i64 {
     let is_white: bool;
-    unsafe {
-        is_white = is_piece_on_cell_white(board as *mut Board, cell);
-    }
+    is_white = is_piece_on_cell_white(board as *mut Board, cell);
 
     let pst_index: usize = if is_white { cell as usize } else { (cell ^ 56) as usize };
     let game_phase = get_game_phase(board) as i64;
