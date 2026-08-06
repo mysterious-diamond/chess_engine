@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include "raylib.h"
-#include "../../logic/logic.h"
+#include "../../engine/chess_engine.h"
 
 // define macros
 #define SCREEN_HEIGHT 800

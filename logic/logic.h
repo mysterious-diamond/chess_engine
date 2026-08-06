@@ -2,66 +2,8 @@
 
 #include <cstdint>
 
-// This implementation is using bitboards. More on bitboards : https://en.wikipedia.org/wiki/Bitboard
-struct Board {
-    uint64_t white_pawns{65280ull};
-    uint64_t white_rooks{129ull};
-    uint64_t white_knights{66ull};
-    uint64_t white_bishops{36ull};
-    uint64_t white_queens{8ull};
-    uint64_t white_king{16ull};
-
-    uint64_t black_pawns{71776119061217280ull};
-    uint64_t black_rooks{9295429630892703744ull};
-    uint64_t black_knights{4755801206503243776ull};
-    uint64_t black_bishops{2594073385365405696ull};
-    uint64_t black_queens{576460752303423488ull};
-    uint64_t black_king{1152921504606846976ull};
-};
-
 extern "C" {
-bool is_in_check(Board board, bool is_checking_white);
-
-// Give castle availability flags in the pattern : 
-// first bit = white long castle, second bit = white short castle, third bit = black long castle, fourth bit = black short castle
-void get_piece_legal_moves(Board& board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell, uint8_t castle_flags);
-
-void get_strictly_legal_moves(Board& board, uint16_t last_move, uint16_t* array_ptr, uint64_t* piece_type);
-bool try_make_move_and_check_if_causes_check(Board& board, uint64_t* piece_type, uint16_t last_move, uint16_t move);
-
-void get_pawn_legal_moves(Board board, uint16_t* array_ptr, uint16_t last_move, uint8_t cell);
-void get_rook_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
-void get_bishop_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
-void get_knight_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
-void get_queen_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell);
-void get_king_legal_moves(Board board, uint16_t* array_ptr, uint8_t cell, uint8_t castle_flags);
-
-void try_insert_pawn_enpassant_move(Board board, uint16_t (&legal_moves)[27], uint16_t last_move, uint8_t cell, int moveN);
-
-// You can leave last_move parameter blank if it's not en passant
-void make_move(Board& board, uint16_t last_move, uint16_t move);
-
-// This implementation of the evaluation function uses Piece Square Tables (PSTs)
-// More about PSTs : https://en.wikipedia.org/wiki/Evaluation_function#Piece-square_tables
-double evaluate_board(Board& board, bool is_evaluating_white);
-
-void remove_piece_on_cell(Board& board, uint8_t cell);
-
-// chosen_promotion_type : 1 for king, 2 for rook, 3 for knight, 4 for bishop
-bool try_promote_pawn(Board& board, uint8_t chosen_promotion_type);
-double get_material_score_of_piece(Board board, uint8_t cell);
-
-bool is_cell_empty(Board& board, uint8_t cell);
-bool is_valid_target(Board board, uint8_t cell, bool is_attacker_white);
-bool is_piece_on_cell_white(Board& board, uint8_t cell);
-
-uint8_t get_promotion_pawn_cell(Board board);
 uint16_t get_move_from_destination_in_legal_moves(uint16_t* array_ptr, uint8_t destination_to_check);
 uint16_t generate_move(uint8_t original_pos, uint8_t destination, bool is_en_passant, bool is_castle, bool is_promotion,
                        bool is_capture);
-
-uint64_t* get_piece_type_on_cell(Board& board, uint8_t cell);
-
-double get_PST_score_of_piece(Board board, uint8_t cell);
-int get_game_phase(Board board);
 }

@@ -5,7 +5,6 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "../../engine/chess_engine.h"
 #include "../../logic/logic.h"
 #include "raylib.h"
 
@@ -41,7 +40,11 @@ Game::Game(bool is_engine_mode) {
 
     selectedCell = 64;
     std::memset(last_checked_legal_moves, 0, sizeof(*last_checked_legal_moves));
-    Board board{};
+    Board board{
+        0x000000000000FF00ULL, 0x0000000000000081ULL, 0x0000000000000042ULL, 0x0000000000000024ULL,
+        0x0000000000000008ULL, 0x0000000000000010ULL, 0x00FF000000000000ULL, 0x8100000000000000ULL,
+        0x4200000000000000ULL, 0x2400000000000000ULL, 0x0800000000000000ULL, 0x1000000000000000ULL,
+    };
 
     this->is_engine_mode = is_engine_mode;
 }
@@ -78,7 +81,7 @@ void Game::handle_promotion_input() {
         }
         int mouseCell = mouseFile + mouseRank * 8;
 
-        int promotionCell = get_promotion_pawn_cell(board);
+        int promotionCell = get_promotion_pawn_cell(&board);
         if (promotionCell == 64) return;
 
         if (is_white_turn) {
@@ -110,7 +113,7 @@ void Game::handle_input() {
             return;
         }
 
-        if (is_cell_empty(board, clickedCell)) {
+        if (is_cell_empty(&board, clickedCell)) {
             std::memset(last_checked_legal_moves, 0, sizeof(last_checked_legal_moves));
             return;
         }
@@ -186,7 +189,7 @@ void Game::draw_legal_moves() {
 }
 
 void Game::render_promotion_board() {
-    int promotionCell = get_promotion_pawn_cell(board);
+    int promotionCell = get_promotion_pawn_cell(&board);
     if (promotionCell == 64) return;
 
     if (!is_white_turn) {
@@ -280,10 +283,10 @@ void Game::handle_white_placement(uint8_t clickedCell) {
 
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
     if (move) {
-        uint64_t* piece_type = get_piece_type_on_cell(board, selectedCell);
+        uint64_t* piece_type = get_piece_type_on_cell(&board, selectedCell);
         handle_move(board, move);
 
-        if (get_promotion_pawn_cell(board) != 64) is_selecting_promotion = true;
+        if (get_promotion_pawn_cell(&board) != 64) is_selecting_promotion = true;
     }
 
     reset_placement_variables();
@@ -298,22 +301,22 @@ void Game::handle_black_placement(uint8_t clickedCell) {
 
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
     if (move) {
-        uint64_t* piece_type = get_piece_type_on_cell(board, selectedCell);
+        uint64_t* piece_type = get_piece_type_on_cell(&board, selectedCell);
         handle_move(board, move);
 
-        if (get_promotion_pawn_cell(board) != 64) is_selecting_promotion = true;
+        if (get_promotion_pawn_cell(&board) != 64) is_selecting_promotion = true;
     }
 
     reset_placement_variables();
 }
 
 void Game::handle_move(Board& board, uint16_t move) {
-    make_move(board, last_move, move);
+    make_move(&board, last_move, move);
 
     uint8_t original_pos = (move >> 10) & 63ull;
     uint8_t destination_pos = (move >> 4) & 63ull;
 
-    uint64_t* piece_type = get_piece_type_on_cell(board, destination_pos);
+    uint64_t* piece_type = get_piece_type_on_cell(&board, destination_pos);
 
     last_move = move;
     bool is_castle = move & (1ull << 2);
@@ -344,11 +347,11 @@ void Game::handle_move(Board& board, uint16_t move) {
         is_black_short_castle_available = false;
     }
 
-    uint8_t pawn_promotion_cell = get_promotion_pawn_cell(board);
+    uint8_t pawn_promotion_cell = get_promotion_pawn_cell(&board);
     if (pawn_promotion_cell == 64) is_white_turn = !is_white_turn;
 
-    white_in_check = is_in_check(board, true);
-    black_in_check = is_in_check(board, false);
+    white_in_check = is_in_check(&board, true);
+    black_in_check = is_in_check(&board, false);
 }
 
 void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture) {
@@ -357,13 +360,13 @@ void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
         return;
     }
 
-    if (!is_piece_on_cell_white(board, clickedCell)) return;
-    uint64_t* type = get_piece_type_on_cell(board, clickedCell);
+    if (!is_piece_on_cell_white(&board, clickedCell)) return;
+    uint64_t* type = get_piece_type_on_cell(&board, clickedCell);
 
     uint8_t castle_flags = is_black_long_castle_available * 8 + is_black_short_castle_available * 4 +
                            is_white_short_castle_available * 2 + is_white_long_castle_available;
-    get_piece_legal_moves(board, &last_checked_legal_moves[0], last_move, clickedCell, castle_flags);
-    get_strictly_legal_moves(board, last_move, &last_checked_legal_moves[0], type);
+    get_piece_legal_moves(&board, &last_checked_legal_moves[0], last_move, clickedCell, castle_flags);
+    get_strictly_legal_moves(&board, last_move, &last_checked_legal_moves[0], type);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -375,14 +378,14 @@ void Game::handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
         return;
     }
 
-    if (is_piece_on_cell_white(board, clickedCell) && !is_cell_empty(board, clickedCell)) return;
-    uint64_t* type = get_piece_type_on_cell(board, clickedCell);
+    if (is_piece_on_cell_white(&board, clickedCell) && !is_cell_empty(&board, clickedCell)) return;
+    uint64_t* type = get_piece_type_on_cell(&board, clickedCell);
 
     uint8_t castle_flags = is_black_long_castle_available * 8 + is_black_short_castle_available * 4 +
                            is_white_short_castle_available * 2 + is_white_long_castle_available;
 
-    get_piece_legal_moves(board, &last_checked_legal_moves[0], last_move, clickedCell, castle_flags);
-    get_strictly_legal_moves(board, last_move, &last_checked_legal_moves[0], type);
+    get_piece_legal_moves(&board, &last_checked_legal_moves[0], last_move, clickedCell, castle_flags);
+    get_strictly_legal_moves(&board, last_move, &last_checked_legal_moves[0], type);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -445,7 +448,7 @@ void Game::handle_white_promotion_choice(int mouseCell, int promotionCell) {
         if (option.second == &board.white_knights) choice = 3;
         if (option.second == &board.white_bishops) choice = 4;
 
-        try_promote_pawn(board, choice);
+        try_promote_pawn(&board, choice);
         is_white_turn = !is_white_turn;
         is_selecting_promotion = false;
     }
@@ -467,7 +470,7 @@ void Game::handle_black_promotion_choice(int mouseCell, int promotionCell) {
         if (option.second == &board.black_knights) choice = 3;
         if (option.second == &board.black_bishops) choice = 4;
 
-        try_promote_pawn(board, choice);
+        try_promote_pawn(&board, choice);
         is_white_turn = !is_white_turn;
         is_selecting_promotion = false;
     }
