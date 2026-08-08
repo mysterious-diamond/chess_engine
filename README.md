@@ -14,6 +14,5 @@ I also conviniently had a half year period before I go back to school, so here i
 It searches 5 moves deep for the highest value in a custom made "Evaluation" function to determine the best course of action
 This is a very simple implementation of a chess engine, however, it is surprisingly effective.
 
-To run, you can just grab the 2 executables, one is the interface/build/chess_engine.exe, 
-then just run them. (OTHER EXECUTABLE W.I.P.)
+To run, you can just grab the exe file in the most recent GitHub release of this repo and run it.
 
