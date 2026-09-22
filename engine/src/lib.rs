@@ -5,7 +5,12 @@ mod logic;
 mod pst;
 
 #[unsafe(no_mangle)]
-pub extern "C" fn get_engine_move(mut board: Board, search_depth: u8, last_move: u16, is_team_white: bool) -> u16 {
+pub extern "C" fn get_engine_move(
+    mut board: Board,
+    search_depth: u8,
+    last_move: u16,
+    is_team_white: bool,
+) -> u16 {
     let mut alpha = f64::NEG_INFINITY;
     let beta = f64::INFINITY;
 
@@ -20,7 +25,14 @@ pub extern "C" fn get_engine_move(mut board: Board, search_depth: u8, last_move:
         let mut start_board = board;
         make_move(&mut start_board as *mut Board, last_move, move_data);
 
-        let score = -search(start_board, search_depth - 1, -beta, -alpha, move_data, !is_team_white);
+        let score = -search(
+            start_board,
+            search_depth - 1,
+            -beta,
+            -alpha,
+            move_data,
+            !is_team_white,
+        );
 
         if score > alpha {
             alpha = score;
@@ -31,12 +43,20 @@ pub extern "C" fn get_engine_move(mut board: Board, search_depth: u8, last_move:
     chosen_move
 }
 
-fn search(mut board: Board, search_depth: u8, mut alpha: f64, beta: f64, last_move: u16, is_team_white: bool) -> f64 {
+fn search(
+    mut board: Board,
+    search_depth: u8,
+    mut alpha: f64,
+    beta: f64,
+    last_move: u16,
+    is_team_white: bool,
+) -> f64 {
     if search_depth == 0 {
         return quiescence(board, alpha, beta, last_move, is_team_white);
     }
 
-    let mut legal_moves: Vec<u16> = get_all_legal_moves_of_team(&mut board, last_move, is_team_white);
+    let mut legal_moves: Vec<u16> =
+        get_all_legal_moves_of_team(&mut board, last_move, is_team_white);
     legal_moves.retain(|&m| m != 0);
 
     if legal_moves.is_empty() {
@@ -59,7 +79,14 @@ fn search(mut board: Board, search_depth: u8, mut alpha: f64, beta: f64, last_mo
             let _ = try_promote_pawn(&mut new_board as *mut Board, 1);
         }
 
-        let score: f64 = -search(new_board, search_depth - 1, -beta, -alpha, move_data, !is_team_white);
+        let score: f64 = -search(
+            new_board,
+            search_depth - 1,
+            -beta,
+            -alpha,
+            move_data,
+            !is_team_white,
+        );
 
         if score >= beta {
             return beta;
@@ -73,7 +100,13 @@ fn search(mut board: Board, search_depth: u8, mut alpha: f64, beta: f64, last_mo
     alpha
 }
 
-fn quiescence(mut board: Board, mut alpha: f64, beta: f64, last_move: u16, is_team_white: bool) -> f64 {
+fn quiescence(
+    mut board: Board,
+    mut alpha: f64,
+    beta: f64,
+    last_move: u16,
+    is_team_white: bool,
+) -> f64 {
     let eval: f64 = evaluate_board(&mut board, is_team_white);
 
     if eval >= beta {
@@ -156,7 +189,11 @@ fn get_piece_value(board: &mut Board, cell: u8) -> i64 {
 fn get_pst_score_of_piece(board: &mut Board, cell: u8) -> i64 {
     let is_white: bool = is_piece_on_cell_white(board as *mut Board, cell);
 
-    let pst_index: usize = if is_white { cell as usize } else { (cell ^ 56) as usize };
+    let pst_index: usize = if is_white {
+        cell as usize
+    } else {
+        (cell ^ 56) as usize
+    };
     let game_phase = get_game_phase(board) as i64;
     let piece_type: u64;
 
@@ -278,10 +315,15 @@ fn get_all_legal_moves_of_team(board: &mut Board, last_move: u16, is_team_white:
         }
 
         let mut piece_moves: Vec<u16> = vec![0u16; 27];
-        get_piece_legal_moves(board as *mut Board, piece_moves.as_mut_ptr(), last_move, cell, 0);
-        let piece_type = get_piece_type_on_cell(board, cell);
+        get_piece_legal_moves(
+            board as *mut Board,
+            piece_moves.as_mut_ptr(),
+            last_move,
+            cell,
+            0,
+        );
 
-        get_strictly_legal_moves(board as *mut Board, last_move, piece_moves.as_mut_ptr(), piece_type);
+        get_strictly_legal_moves(board as *mut Board, last_move, piece_moves.as_mut_ptr());
 
         for move_data in piece_moves {
             if move_data == 0 {

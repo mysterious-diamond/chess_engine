@@ -40,11 +40,9 @@ Game::Game(bool is_engine_mode) {
 
     selectedCell = 64;
     std::memset(last_checked_legal_moves, 0, sizeof(*last_checked_legal_moves));
-    Board board{
-        0x000000000000FF00ULL, 0x0000000000000081ULL, 0x0000000000000042ULL, 0x0000000000000024ULL,
-        0x0000000000000008ULL, 0x0000000000000010ULL, 0x00FF000000000000ULL, 0x8100000000000000ULL,
-        0x4200000000000000ULL, 0x2400000000000000ULL, 0x0800000000000000ULL, 0x1000000000000000ULL,
-    };
+    board = Board{0x000000000000FF00ULL, 0x0000000000000081ULL, 0x0000000000000042ULL, 0x0000000000000024ULL,
+                  0x0000000000000008ULL, 0x0000000000000010ULL, 0x00FF000000000000ULL, 0x8100000000000000ULL,
+                  0x4200000000000000ULL, 0x2400000000000000ULL, 0x0800000000000000ULL, 0x1000000000000000ULL};
 
     this->is_engine_mode = is_engine_mode;
 }
@@ -278,7 +276,7 @@ void Game::handle_white_placement(uint8_t clickedCell) {
     Texture2D texture = get_piece_texture_on_cell(selectedCell);
     if (!texture.id) return;
 
-    uint16_t legal_moves[27];
+    uint16_t legal_moves[64];
     std::memcpy(legal_moves, last_checked_legal_moves, sizeof(legal_moves));
 
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
@@ -296,7 +294,7 @@ void Game::handle_black_placement(uint8_t clickedCell) {
     Texture2D texture = get_piece_texture_on_cell(selectedCell);
     if (!texture.id) return;
 
-    uint16_t legal_moves[27];
+    uint16_t legal_moves[64];
     std::memcpy(legal_moves, last_checked_legal_moves, sizeof(legal_moves));
 
     uint16_t move = get_move_from_destination_in_legal_moves(&legal_moves[0], clickedCell);
@@ -360,13 +358,21 @@ void Game::handle_white_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
         return;
     }
 
+    std::cout << "Board address : " << &board << " white pawn val : " << board.white_pawns << '\n';
+    std::cout << "Try check whiteness : " << (int)clickedCell << "\n";
     if (!is_piece_on_cell_white(&board, clickedCell)) return;
+
+    std::cout << "Getting piece type\n";
     uint64_t* type = get_piece_type_on_cell(&board, clickedCell);
+    std::cout << "Got piece type\n";
 
     uint8_t castle_flags = is_black_long_castle_available * 8 + is_black_short_castle_available * 4 +
                            is_white_short_castle_available * 2 + is_white_long_castle_available;
+
+    std::cout << "Getting legal moves\n";
     get_piece_legal_moves(&board, &last_checked_legal_moves[0], last_move, clickedCell, castle_flags);
-    get_strictly_legal_moves(&board, last_move, &last_checked_legal_moves[0], type);
+    get_strictly_legal_moves(&board, last_move, &last_checked_legal_moves[0]);
+    std::cout << "Got legal moves\n";
 
     is_placement_mode = true;
     selectedCell = clickedCell;
@@ -385,7 +391,7 @@ void Game::handle_black_turn(uint8_t clickedCell, Texture2D selectedCellTexture)
                            is_white_short_castle_available * 2 + is_white_long_castle_available;
 
     get_piece_legal_moves(&board, &last_checked_legal_moves[0], last_move, clickedCell, castle_flags);
-    get_strictly_legal_moves(&board, last_move, &last_checked_legal_moves[0], type);
+    get_strictly_legal_moves(&board, last_move, &last_checked_legal_moves[0]);
 
     is_placement_mode = true;
     selectedCell = clickedCell;
