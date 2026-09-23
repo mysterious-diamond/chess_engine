@@ -75,7 +75,7 @@ fn search(
 
         let mut new_board = board;
         make_move(&mut new_board, last_move, move_data);
-        if (move_data & 4) == 4 {
+        if (move_data & 2) == 2 {
             let _ = try_promote_pawn(&mut new_board as *mut Board, 1);
         }
 
@@ -314,7 +314,7 @@ fn get_all_legal_moves_of_team(board: &mut Board, last_move: u16, is_team_white:
             continue;
         }
 
-        let mut piece_moves: Vec<u16> = vec![0u16; 27];
+        let mut piece_moves: Vec<u16> = vec![0u16; 64];
         get_piece_legal_moves(
             board as *mut Board,
             piece_moves.as_mut_ptr(),

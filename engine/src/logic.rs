@@ -49,7 +49,7 @@ pub extern "C" fn is_in_check(board: *mut Board, is_checking_white: bool) -> boo
         }
     };
     for cell in 0..64 {
-        if check_king & (1 << cell) != 0 {
+        if check_king & (1u64 << cell) != 0 {
             king_cell = cell;
             break;
         }
@@ -58,7 +58,12 @@ pub extern "C" fn is_in_check(board: *mut Board, is_checking_white: bool) -> boo
     println!("hm mega hm");
     for cell in 0..64 {
         println!("MEGA STEINE #{}", cell);
-        let mut legal_moves: Vec<u16> = vec![0; 27];
+
+        if is_cell_empty(board, cell) {
+            continue;
+        }
+
+        let mut legal_moves: Vec<u16> = vec![0; 64];
         get_piece_legal_moves(board, legal_moves.as_mut_ptr(), 0, cell, 0);
 
         for move_data in legal_moves {
@@ -99,7 +104,7 @@ pub extern "C" fn get_piece_legal_moves(
     }
 
     let piece_type: u64 = unsafe { *piece_type };
-    let mut legal_moves: Vec<u16> = vec![0; 27];
+    let mut legal_moves: Vec<u16> = vec![0; 64];
 
     println!("Legal moves vec size : {}", legal_moves.len());
     if piece_type == board.white_pawns || piece_type == board.black_pawns {
@@ -134,10 +139,10 @@ pub extern "C" fn get_piece_legal_moves(
 #[unsafe(no_mangle)]
 pub extern "C" fn get_strictly_legal_moves(board: *mut Board, last_move: u16, array_ptr: *mut u16) {
     println!("Strictly legal moves function called");
-    let mut strictly_legal_moves: Vec<u16> = vec![0; 27];
+    let mut strictly_legal_moves: Vec<u16> = vec![0; 64];
 
     let mut amount_of_moves: usize = 0;
-    for i in 0..27 {
+    for i in 0..64 {
         let move_data: u16 = unsafe { *array_ptr.add(i) };
         if move_data == 0 {
             println!(
@@ -209,7 +214,7 @@ pub extern "C" fn make_move(board: *mut Board, last_move: u16, move_data: u16) {
         } else {
             new_pos
         };
-        remove_piece_on_cell(&mut unsafe { *board }, attack_pos);
+        remove_piece_on_cell(board, attack_pos);
     } else if is_castle {
         let rook_type: *mut u64;
         if original_pos == new_pos + 2 {
@@ -283,37 +288,29 @@ pub extern "C" fn try_promote_pawn(board: *mut Board, chosen_promotion_type: u8)
         } else {
             &mut (*board).black_pawns
         };
-        *piece_type ^= 1 << pawn_promotion_cell;
-        if chosen_promotion_type == 1 {
-            let queen_type: *mut u64 = if is_white {
-                (*board).white_queens as *mut u64
-            } else {
-                (*board).black_queens as *mut u64
-            };
-            *queen_type ^= 1 << pawn_promotion_cell;
-        } else if chosen_promotion_type == 2 {
-            let rook_type: *mut u64 = if is_white {
-                (*board).white_rooks as *mut u64
-            } else {
-                (*board).black_rooks as *mut u64
-            };
-            *rook_type ^= 1 << pawn_promotion_cell;
-        } else if chosen_promotion_type == 3 {
-            let knight_type: *mut u64 = if is_white {
-                (*board).white_knights as *mut u64
-            } else {
-                (*board).black_knights as *mut u64
-            };
-            *knight_type ^= 1 << pawn_promotion_cell;
-        } else if chosen_promotion_type == 4 {
-            let bishop_type: *mut u64 = if is_white {
-                (*board).white_bishops as *mut u64
-            } else {
-                (*board).black_bishops as *mut u64
-            };
-            *bishop_type ^= 1 << pawn_promotion_cell;
+
+        *piece_type ^= 1u64 << pawn_promotion_cell;
+    }
+
+    let mask = 1u64 << pawn_promotion_cell;
+
+    unsafe {
+        if is_white {
+            match chosen_promotion_type {
+                1 => (*board).white_queens ^= mask,
+                2 => (*board).white_rooks ^= mask,
+                3 => (*board).white_knights ^= mask,
+                4 => (*board).white_bishops ^= mask,
+                _ => return false,
+            }
         } else {
-            return false;
+            match chosen_promotion_type {
+                1 => (*board).black_queens ^= mask,
+                2 => (*board).black_rooks ^= mask,
+                3 => (*board).black_knights ^= mask,
+                4 => (*board).black_bishops ^= mask,
+                _ => return false,
+            }
         }
     }
 
@@ -347,13 +344,13 @@ pub extern "C" fn is_piece_on_cell_white(board: *const Board, cell: u8) -> bool 
 #[unsafe(no_mangle)]
 pub extern "C" fn get_promotion_pawn_cell(board: &mut Board) -> u8 {
     for i in 56..64 {
-        if board.white_pawns & (1 << i) != 0 {
+        if board.white_pawns & (1u64 << i) != 0 {
             return i;
         }
     }
 
     for i in 0..7 {
-        if board.black_pawns & (1 << i) != 0 {
+        if board.black_pawns & (1u64 << i) != 0 {
             return i;
         }
     }
@@ -363,7 +360,7 @@ pub extern "C" fn get_promotion_pawn_cell(board: &mut Board) -> u8 {
 
 fn get_pawn_legal_moves(board: &mut Board, result_array: &mut [u16], last_move: u16, cell: u8) {
     println!("Get pawn moves for cell {}", cell);
-    let mut legal_moves: Vec<u16> = vec![0; 27];
+    let mut legal_moves: Vec<u16> = vec![0; 64];
     let is_white: bool = is_piece_on_cell_white(board, cell);
 
     let direction: i8 = if is_white { 1 } else { -1 };
@@ -481,7 +478,7 @@ fn get_pawn_legal_moves(board: &mut Board, result_array: &mut [u16], last_move: 
 }
 
 fn get_rook_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8) {
-    let mut legal_moves: Vec<u16> = vec![0; 27];
+    let mut legal_moves: Vec<u16> = vec![0; 64];
     let is_attacker_white: bool = is_piece_on_cell_white(board, cell);
 
     let file: u8 = cell % 8;
@@ -574,7 +571,7 @@ fn get_rook_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8) {
 }
 
 fn get_bishop_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8) {
-    let mut legal_moves: Vec<u16> = vec![0; 27];
+    let mut legal_moves: Vec<u16> = vec![0; 64];
 
     let is_attacker_white: bool = is_piece_on_cell_white(board, cell);
     let file: u8 = cell % 8;
@@ -690,72 +687,45 @@ fn get_bishop_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8)
 }
 
 fn get_knight_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8) {
-    let mut legal_moves: Vec<u16> = vec![0; 27];
+    let mut legal_moves: Vec<u16> = vec![0; 64];
 
     let is_white: bool = is_piece_on_cell_white(board, cell);
-    let attacker_file: u8 = cell % 8;
-    let attacker_rank: u8 = cell / 8;
+    let file: i8 = cell as i8 % 8;
+    let rank: i8 = cell as i8 / 8;
 
     // It is hard to loop through all the legal moves of a knight with a simple
     // for loop, so instead, I am going to hardcode them, then check one by one whether they stand.
-    let mut potential_moves: Vec<u8> = Vec::new();
-    if attacker_rank < 6 {
-        if attacker_file < 7 {
-            potential_moves.push(cell + 17);
-        }
-        if attacker_file > 0 {
-            potential_moves.push(cell + 15);
-        }
-    }
-
-    if attacker_file < 6 {
-        if attacker_rank < 7 {
-            potential_moves.push(cell + 10);
-        }
-        if attacker_rank > 0 {
-            potential_moves.push(cell - 6);
-        }
-    }
-
-    if attacker_rank > 1 {
-        if attacker_file < 7 {
-            potential_moves.push(cell - 15);
-        }
-        if attacker_file > 0 {
-            potential_moves.push(cell - 17);
-        }
-    }
-
-    if attacker_file > 1 {
-        if attacker_rank < 7 {
-            potential_moves.push(cell - 10);
-        }
-        if attacker_rank > 0 {
-            potential_moves.push(cell + 6);
-        }
-    }
+    let potential_moves: [(i8, i8); 8] = [
+        (1, 2),
+        (2, 1),
+        (2, -1),
+        (1, -2),
+        (-1, -2),
+        (-2, -1),
+        (-2, 1),
+        (-1, 2),
+    ];
 
     let mut move_n: usize = 0;
-    for i in 0..27 {
-        if potential_moves.len() >= i {
-            break;
+    for (df, dr) in potential_moves {
+        let new_file = file + df;
+        let new_rank = rank + dr;
+
+        if (0..8).contains(&new_file) && (0..8).contains(&new_rank) {
+            let target: u8 = (new_file + new_rank * 8) as u8;
+
+            if is_valid_cell_and_not_same_team(board, target, is_white) {
+                legal_moves[move_n] = generate_move(
+                    cell,
+                    target,
+                    false,
+                    false,
+                    false,
+                    !is_cell_empty(board, cell),
+                );
+                move_n += 1;
+            }
         }
-
-        let target_cell: u8 = potential_moves[i];
-        if !is_valid_cell_and_not_same_team(board, target_cell, is_white) {
-            continue;
-        }
-
-        let file: u8 = target_cell % 8;
-        let rank: u8 = target_cell / 8;
-
-        if file == attacker_file || rank == attacker_rank {
-            continue;
-        }
-
-        let is_capturing: bool = !is_cell_empty(board, target_cell);
-        legal_moves[move_n] = generate_move(cell, target_cell, false, false, false, is_capturing);
-        move_n += 1;
     }
 
     result_array.copy_from_slice(&legal_moves);
@@ -766,9 +736,9 @@ fn get_queen_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8) 
     // So that's what we're doing, just calling both the get_rook_legal_moves and the get_bishop_legal_moves
     // functions, then combining the result.
 
-    let mut legal_moves: Vec<u16> = vec![0; 27];
-    let mut rook_legal_moves: Vec<u16> = vec![0; 27];
-    let mut bishop_legal_moves: Vec<u16> = vec![0; 27];
+    let mut legal_moves: Vec<u16> = Vec::new();
+    let mut rook_legal_moves: Vec<u16> = vec![0; 64];
+    let mut bishop_legal_moves: Vec<u16> = vec![0; 64];
 
     println!("Rook called");
     get_rook_legal_moves(board, &mut rook_legal_moves, cell);
@@ -786,12 +756,7 @@ fn get_queen_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8) 
         last = i + 1;
     }
 
-    for i in last..27 {
-        if bishop_legal_moves[i - last] == 0 {
-            break;
-        }
-
-        println!("{}", i - last);
+    for i in last..64 {
         legal_moves.push(bishop_legal_moves[i - last]);
     }
 
@@ -802,7 +767,7 @@ fn get_king_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8, c
     // We will make an offset array, then loop through all those offsets
     // to get the king's neighbors since a king's legal moves are just 1 cell in all the
     // directions around it.
-    let mut legal_moves: Vec<u16> = vec![0; 27];
+    let mut legal_moves: Vec<u16> = vec![0; 64];
 
     let neighbors: Vec<i8> = vec![7, 8, 9, -1, 1, -9, -8, -7];
     let is_attacker_white: bool = is_piece_on_cell_white(board, cell);
@@ -835,15 +800,8 @@ fn get_king_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8, c
 
     if is_attacker_white {
         if castle_flags & 1 == 1 {
-            let mut blocked_path: bool = false;
-            for check_cell in 1..(cell - 1) {
-                if is_cell_empty(board, check_cell) {
-                    continue;
-                }
-
-                blocked_path = true;
-                break;
-            }
+            let blocked_path: bool =
+                is_cell_empty(board, 1) && is_cell_empty(board, 2) || is_cell_empty(board, 3);
 
             if !blocked_path {
                 legal_moves[move_n] = generate_move(cell, cell - 2, false, true, false, false);
@@ -852,14 +810,7 @@ fn get_king_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8, c
         }
 
         if castle_flags & 2 == 2 {
-            let mut blocked_path: bool = false;
-            for check_cell in (cell + 1)..7 {
-                if is_cell_empty(board, check_cell) {
-                    continue;
-                }
-                blocked_path = true;
-                break;
-            }
+            let blocked_path: bool = is_cell_empty(board, 5) || is_cell_empty(board, 6);
 
             if !blocked_path {
                 legal_moves[move_n] = generate_move(cell, cell + 2, false, true, false, false);
@@ -867,14 +818,8 @@ fn get_king_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8, c
         }
     } else {
         if castle_flags & 4 == 4 {
-            let mut blocked_path: bool = false;
-            for check_cell in 56..cell {
-                if is_cell_empty(board, check_cell) {
-                    continue;
-                }
-                blocked_path = true;
-                break;
-            }
+            let blocked_path: bool =
+                is_cell_empty(board, 57) || is_cell_empty(board, 58) || is_cell_empty(board, 59);
 
             if !blocked_path {
                 legal_moves[move_n] = generate_move(cell, cell - 2, false, true, false, false);
@@ -883,15 +828,7 @@ fn get_king_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8, c
         }
 
         if castle_flags & 8 == 8 {
-            let mut blocked_path: bool = false;
-            for check_cell in (cell + 1)..64 {
-                if is_cell_empty(board, check_cell) {
-                    continue;
-                }
-
-                blocked_path = true;
-                break;
-            }
+            let blocked_path: bool = is_cell_empty(board, 61) || is_cell_empty(board, 62);
 
             if !blocked_path {
                 legal_moves[move_n] = generate_move(cell, cell + 2, false, true, false, false);
@@ -902,7 +839,7 @@ fn get_king_legal_moves(board: &mut Board, result_array: &mut [u16], cell: u8, c
     result_array.copy_from_slice(&legal_moves);
 }
 
-fn remove_piece_on_cell(board: &mut Board, cell: u8) {
+fn remove_piece_on_cell(board: *mut Board, cell: u8) {
     let piece_type: *mut u64 = get_piece_type_on_cell(board, cell);
 
     if piece_type.is_null() {
@@ -935,7 +872,7 @@ fn try_insert_pawn_enpassant_move(
     let destination_left: u8 = if is_white { cell + 7 } else { cell - 7 };
     let destination_right: u8 = if is_white { cell + 9 } else { cell - 9 };
 
-    let last_destination: u8 = ((last_move >> 4) & 64) as u8;
+    let last_destination: u8 = ((last_move >> 4) & 63) as u8;
     let is_left_cell_last_moved: bool = left_cell == last_destination;
     let is_right_cell_last_moved: bool = right_cell == last_destination;
 
@@ -956,7 +893,7 @@ fn is_valid_cell_and_not_same_team(board: &mut Board, cell: u8, attacker_team: b
         return false;
     }
 
-    is_piece_on_cell_white(board, cell) != attacker_team
+    is_cell_empty(board, cell) || is_piece_on_cell_white(board, cell) != attacker_team
 }
 
 fn generate_move(

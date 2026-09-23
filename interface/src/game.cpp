@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "../../logic/logic.h"
+#include "chess_engine.h"
 #include "raylib.h"
 
 bool Game::is_selecting_promotion = false;
@@ -53,8 +54,17 @@ void Game::step_game() {
     } else {
         if (is_engine_mode && !is_white_turn) {
             uint16_t move = get_engine_move(board, 3, last_move, false);
-            std::cout << "Engine said" << move << '\n';
-            handle_move(board, move);
+            if (move != 0) {
+                handle_move(board, move);
+                uint8_t promo_cell = get_promotion_pawn_cell(&board);
+
+                if (promo_cell != 64) {
+                    try_promote_pawn(&board, 1);
+                    is_white_turn = true;
+                    is_selecting_promotion = false;
+                }
+            }
+
         } else {
             handle_input();
         }
