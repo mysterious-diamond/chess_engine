@@ -16,3 +16,5 @@ This is a very simple implementation of a chess engine, however, it is surprisin
 
 To run, you can just grab the exe file in the most recent GitHub release of this repo and run it.
 
+## **CURRENT STATE OF CODE IS UNSTABLE, PLEASE USE THE LATEST RELEASE INSTEAD TO RUN**
+
